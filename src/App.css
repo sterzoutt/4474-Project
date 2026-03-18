@@ -1,16 +1,21 @@
 .app {
   min-height: 100vh;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #2d5548;
   color: #fff;
   font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .menu-container {
   text-align: center;
   padding: 3rem;
+  width: 100%;
 }
 
 .game-title {

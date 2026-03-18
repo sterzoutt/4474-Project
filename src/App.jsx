@@ -16,7 +16,12 @@ function App() {
 
   const handleQuit = () => {
     console.log('Quit clicked')
-    // Will close or return to home
+    // Try to close the window/tab
+    window.close()
+    // If window.close() doesn't work (some browsers prevent it), navigate away
+    if (!window.closed) {
+      window.location.href = 'about:blank'
+    }
   }
 
   return (
