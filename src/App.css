@@ -310,6 +310,41 @@
   .pipe-option {
     padding: 8px 12px;
     font-size: 0.8rem;
+}
+
+.menu-btn::before {
+  content: '▶';
+  position: absolute;
+  left: 20px;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+  background: #b8654f;
+  color: #fff;
+  transform: translateX(10px);
+  box-shadow: 0 4px 15px rgba(184, 101, 79, 0.4);
+}
+
+.menu-btn:hover::before {
+  opacity: 1;
+  left: 30px;
+}
+
+.menu-btn:active {
+  transform: translateX(10px) scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .game-title {
+    font-size: 2rem;
+  }
+
+  .menu-btn {
+    width: 250px;
+    font-size: 1.5rem;
+    padding: 1rem 2rem;
   }
 }
 
