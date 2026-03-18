@@ -47,34 +47,35 @@ function GameScreen() {
           // Check if pipe connects to neighbors
           let hasConnection = false
           
-          // Check top
+          // Check top (this pipe needs to be vertical, neighbor needs to be vertical)
           if (i > 0 && newGrid[i-1][j].type !== 'empty') {
             const topRotation = newGrid[i-1][j].rotation
-            if ((rotation === 0 || rotation === 180) && (topRotation === 0 || topRotation === 180)) {
+            // Both pipes are vertical (90° or 270°)
+            if ((rotation === 90 || rotation === 270) && (topRotation === 90 || topRotation === 270)) {
               hasConnection = true
             }
           }
           
-          // Check bottom  
+          // Check bottom (this pipe needs to be vertical, neighbor needs to be vertical)
           if (i < GRID_SIZE - 1 && newGrid[i+1][j].type !== 'empty') {
             const bottomRotation = newGrid[i+1][j].rotation
-            if ((rotation === 0 || rotation === 180) && (bottomRotation === 0 || bottomRotation === 180)) {
+            // Both pipes are vertical (90° or 270°)
+            if ((rotation === 90 || rotation === 270) && (bottomRotation === 90 || bottomRotation === 270)) {
               hasConnection = true
             }
           }
           
-          // Check left
+          // Check left (this pipe needs to be horizontal, neighbor needs to be horizontal)
           if (j > 0 && newGrid[i][j-1].type !== 'empty') {
             const leftRotation = newGrid[i][j-1].rotation
-            if ((rotation === 90 || rotation === 270) && (leftRotation === 90 || leftRotation === 270)) {
+            if ((rotation === 0 || rotation === 180) && (leftRotation === 0 || leftRotation === 180)) {
               hasConnection = true
             }
           }
           
-          // Check right
           if (j < GRID_SIZE - 1 && newGrid[i][j+1].type !== 'empty') {
             const rightRotation = newGrid[i][j+1].rotation
-            if ((rotation === 90 || rotation === 270) && (rightRotation === 90 || rightRotation === 270)) {
+            if ((rotation === 0 || rotation === 180) && (rightRotation === 0 || rightRotation === 180)) {
               hasConnection = true
             }
           }

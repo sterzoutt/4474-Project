@@ -202,11 +202,19 @@
 }
 
 .control-btn .pipe {
-  width: 50px;
-  height: 50px;
+  width: 25px;
+  height: 25px;
   object-fit: contain;
   transition: transform 0.3s ease;
   pointer-events: none;
+}
+
+.game-board .pipe {
+  width: 70px !important;
+  height: 70px !important;
+  object-fit: contain !important;
+  max-width: 75px !important;
+  max-height: 75px !important;
 }
 
 /* Larger Grid Styles */
@@ -237,8 +245,8 @@
 }
 
 .control-btn img {
-  width: 50px;
-  height: 50px;
+  width: 35px;
+  height: 35px;
   object-fit: contain;
   background: rgba(255,255,255,0.2);
   border-radius: 8px;
@@ -505,8 +513,8 @@
 }
 
 .pipe {
-  width: 50px;
-  height: 50px;
+  width: 25px;
+  height: 25px;
   object-fit: contain;
   transition: transform 0.3s ease;
   pointer-events: none;
@@ -537,4 +545,5 @@
   background: rgba(0,255,0,0.3);
   border-color: #00ff00;
   box-shadow: 0 0 10px rgba(0,255,0,0.5);
+}
 }

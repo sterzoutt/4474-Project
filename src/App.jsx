@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import './App.css'
+import GameScreen from './GameScreen'
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('menu')
 
   const handlePlay = () => {
     console.log('Play clicked')
-    // Will navigate to game screen later
+    setCurrentScreen('game')
   }
 
   const handleOptions = () => {
@@ -22,6 +23,23 @@ function App() {
     if (!window.closed) {
       window.location.href = 'about:blank'
     }
+  }
+
+  // Render different screens based on currentScreen state
+  if (currentScreen === 'game') {
+    return (
+      <div>
+        <div className="game-header-nav">
+          <button 
+            className="back-btn"
+            onClick={() => setCurrentScreen('menu')}
+          >
+            ← Back to Menu
+          </button>
+        </div>
+        <GameScreen />
+      </div>
+    )
   }
 
   return (
