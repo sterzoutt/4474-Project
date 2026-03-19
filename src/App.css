@@ -7,8 +7,15 @@
   box-sizing: border-box;
 }
 
+/* Full screen background image */
 body {
+  background-image: url('./widgets/gamescreen-background.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   margin: 0;
+  padding: 0;
   overflow: hidden;
 }
 
@@ -16,9 +23,9 @@ body {
   width: 100vw;
   height: 100vh;
   margin: 0;
-  padding: 0;
+  padding: 20px;
   font-family: 'Indie Flower', cursive;
-  background: #274C43;
+  background: rgba(0,0,0,0.8);
   color: white;
   overflow: hidden;
   display: flex;
@@ -26,7 +33,283 @@ body {
   justify-content: center;
 }
 
-/* Main Menu Styles */
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.game-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.game-info {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  font-size: 1.2rem;
+}
+
+.score, .level {
+  background: rgba(255,255,255,0.2);
+  padding: 10px 20px;
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+}
+
+.math-problem {
+  text-align: center;
+  margin-bottom: 30px;
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.math-problem h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: #ffd700;
+}
+
+/* Game Board with translucent background */
+.game-board {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(0,0,0,0.1);
+  backdrop-filter: blur(5px);
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.grid-row {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+
+.tile {
+  width: 60px;
+  height: 60px;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.tile:hover {
+  background: rgba(255,255,255,0.2);
+  transform: scale(1.05);
+}
+
+.tile.connected {
+  background: rgba(0,255,0,0.3);
+  border-color: #00ff00;
+  box-shadow: 0 0 10px rgba(0,255,0,0.5);
+}
+
+.tile.empty {
+  background: rgba(0,0,0,0.2);
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* Pipe Styles */
+.tile.straight-h {
+  background: linear-gradient(90deg, transparent 20%, #4a5568 20%, #4a5568 80%, transparent 80%);
+}
+
+.tile.straight-v {
+  background: linear-gradient(0deg, transparent 20%, #4a5568 20%, #4a5568 80%, transparent 80%);
+}
+
+.tile.curve-tl {
+  background: radial-gradient(circle at 100% 100%, transparent 30%, #4a5568 30%);
+}
+
+.tile.curve-tr {
+  background: radial-gradient(circle at 0% 100%, transparent 30%, #4a5568 30%);
+}
+
+.tile.curve-bl {
+  background: radial-gradient(circle at 100% 0%, transparent 30%, #4a5568 30%);
+}
+
+.tile.curve-br {
+  background: radial-gradient(circle at 0% 0%, transparent 30%, #4a5568 30%);
+}
+
+.tile.cross {
+  background: 
+    linear-gradient(90deg, transparent 20%, #4a5568 20%, #4a5568 80%, transparent 80%),
+    linear-gradient(0deg, transparent 20%, #4a5568 20%, #4a5568 80%, transparent 80%);
+}
+
+.tile-number {
+  position: absolute;
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.pipe-selector {
+  text-align: center;
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.pipe-selector h3 {
+  margin-bottom: 15px;
+  color: #ffd700;
+}
+
+.pipe-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pipe-option {
+  padding: 10px 15px;
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.pipe-option:hover {
+  background: rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+
+.pipe-option.selected {
+  background: rgba(255,215,0,0.3);
+  border-color: #ffd700;
+}
+
+.game-controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.control-btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 25px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.control-btn:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.control-btn .pipe {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.game-board .pipe {
+  width: 70px !important;
+  height: 70px !important;
+  object-fit: contain !important;
+  max-width: 75px !important;
+  max-height: 75px !important;
+}
+
+/* Larger Grid Styles */
+.tile {
+  width: 80px !important;
+  height: 80px !important;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.tile:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.5);
+  transform: scale(1.05);
+}
+
+.tile.connected {
+  background: rgba(0,255,0,0.3);
+  border-color: #00ff00;
+  box-shadow: 0 0 10px rgba(0,255,0,0.5);
+}
+
+.control-btn img {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 5px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.control-btn img:hover {
+  background: rgba(0,0,0,0.4);
+  filter: brightness(0.7);
+}
+
+.control-btn img:active {
+  transform: scale(0.95);
+}
+
+.game-instructions {
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  margin-bottom: 20px;
+}
+
+.game-instructions h3 {
+  color: #ffd700;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.game-instructions ul {
+  list-style: none;
+}
+
 .menu-container {
   display: flex;
   flex-direction: column;
