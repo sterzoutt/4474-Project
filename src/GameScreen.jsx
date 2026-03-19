@@ -20,57 +20,6 @@ function GameScreen() {
       setHistory(newHistory)
       console.log('Undo action')
     }
-    
-    // Check top-to-bottom and left-to-right connections
-    for (let i = 0; i < GRID_SIZE; i++) {
-      for (let j = 0; j < GRID_SIZE; j++) {
-        if (newGrid[i][j].type !== 'empty') {
-          const rotation = newGrid[i][j].rotation
-          
-          // Check if pipe connects to neighbors
-          let hasConnection = false
-          
-          // Check top (this pipe needs to be vertical, neighbor needs to be vertical)
-          if (i > 0 && newGrid[i-1][j].type !== 'empty') {
-            const topRotation = newGrid[i-1][j].rotation
-            // Both pipes are vertical (90° or 270°)
-            if ((rotation === 90 || rotation === 270) && (topRotation === 90 || topRotation === 270)) {
-              hasConnection = true
-            }
-          }
-          
-          // Check bottom (this pipe needs to be vertical, neighbor needs to be vertical)
-          if (i < GRID_SIZE - 1 && newGrid[i+1][j].type !== 'empty') {
-            const bottomRotation = newGrid[i+1][j].rotation
-            // Both pipes are vertical (90° or 270°)
-            if ((rotation === 90 || rotation === 270) && (bottomRotation === 90 || bottomRotation === 270)) {
-              hasConnection = true
-            }
-          }
-          
-          // Check left (this pipe needs to be horizontal, neighbor needs to be horizontal)
-          if (j > 0 && newGrid[i][j-1].type !== 'empty') {
-            const leftRotation = newGrid[i][j-1].rotation
-            // Both pipes are horizontal (0° or 180°)
-            if ((rotation === 0 || rotation === 180) && (leftRotation === 0 || leftRotation === 180)) {
-              hasConnection = true
-            }
-          }
-          
-          if (j < GRID_SIZE - 1 && newGrid[i][j+1].type !== 'empty') {
-            const rightRotation = newGrid[i][j+1].rotation
-            // Both pipes are horizontal (0° or 180°)
-            if ((rotation === 0 || rotation === 180) && (rightRotation === 0 || rightRotation === 180)) {
-              hasConnection = true
-            }
-          }
-          
-          newGrid[i][j].connected = hasConnection
-        }
-      }
-    }
-    
-    setGrid(newGrid)
   }
 
   const handleReset = () => {
