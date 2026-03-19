@@ -12,8 +12,8 @@ function OptionsScreen({ onBack }) {
       difficulty: 'Normal',
       soundEnabled: true,
       musicEnabled: true,
-      soundVolume: 100,
-      musicVolume: 100
+      soundVolume: 80,
+      musicVolume: 80
     }
   }
 
@@ -51,8 +51,8 @@ function OptionsScreen({ onBack }) {
       difficulty: 'Normal',
       soundEnabled: true,
       musicEnabled: true,
-      soundVolume: 100,
-      musicVolume: 100
+      soundVolume: 80,
+      musicVolume: 80
     }
     setTempSettings(defaultSettings)
   }
@@ -63,8 +63,15 @@ function OptionsScreen({ onBack }) {
         <span className="back-icon">🏠</span> Back
       </button>
 
-      <div className="settings-panel">
+      <div className="settings-header">
         <h1 className="settings-title">SETTINGS</h1>
+      </div>
+
+      <div className="settings-panel">
+        <div className="panel-screw top-left"></div>
+        <div className="panel-screw top-right"></div>
+        <div className="panel-screw bottom-left"></div>
+        <div className="panel-screw bottom-right"></div>
 
         {/* Difficulty Section */}
         <div className="settings-section">
