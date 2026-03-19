@@ -47,35 +47,38 @@ function GameScreen() {
           // Check if pipe connects to neighbors
           let hasConnection = false
           
-          // Check top (this pipe needs to be vertical, neighbor needs to be vertical)
+          // Check top (this pipe needs to face up, neighbor needs to face down)
           if (i > 0 && newGrid[i-1][j].type !== 'empty') {
             const topRotation = newGrid[i-1][j].rotation
-            // Both pipes are vertical (90° or 270°)
-            if ((rotation === 90 || rotation === 270) && (topRotation === 90 || topRotation === 270)) {
+            // This pipe faces up (270°) and neighbor faces down (90°)
+            if (rotation === 270 && topRotation === 90) {
               hasConnection = true
             }
           }
           
-          // Check bottom (this pipe needs to be vertical, neighbor needs to be vertical)
+          // Check bottom (this pipe needs to face down, neighbor needs to face up)
           if (i < GRID_SIZE - 1 && newGrid[i+1][j].type !== 'empty') {
             const bottomRotation = newGrid[i+1][j].rotation
-            // Both pipes are vertical (90° or 270°)
-            if ((rotation === 90 || rotation === 270) && (bottomRotation === 90 || bottomRotation === 270)) {
+            // This pipe faces down (90°) and neighbor faces up (270°)
+            if (rotation === 90 && bottomRotation === 270) {
               hasConnection = true
             }
           }
           
-          // Check left (this pipe needs to be horizontal, neighbor needs to be horizontal)
+          // Check left (this pipe needs to face left, neighbor needs to face right)
           if (j > 0 && newGrid[i][j-1].type !== 'empty') {
             const leftRotation = newGrid[i][j-1].rotation
-            if ((rotation === 0 || rotation === 180) && (leftRotation === 0 || leftRotation === 180)) {
+            // This pipe faces left (180°) and neighbor faces right (0°)
+            if (rotation === 180 && leftRotation === 0) {
               hasConnection = true
             }
           }
           
+          // Check right (this pipe needs to face right, neighbor needs to face left)
           if (j < GRID_SIZE - 1 && newGrid[i][j+1].type !== 'empty') {
             const rightRotation = newGrid[i][j+1].rotation
-            if ((rotation === 0 || rotation === 180) && (rightRotation === 0 || rightRotation === 180)) {
+            // This pipe faces right (0°) and neighbor faces left (180°)
+            if (rotation === 0 && rightRotation === 180) {
               hasConnection = true
             }
           }
