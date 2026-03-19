@@ -1,0 +1,269 @@
+/* Play Mode Container */
+.play-mode-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #274C43;
+  overflow: hidden;
+}
+
+/* Main Playing Area */
+.main-play-area {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+/* Top Section */
+.top-section {
+  position: absolute;
+  top: 3%;
+  left: 3%;
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+}
+
+.pipe-length-label {
+  font-family: 'Indie Flower', cursive;
+  font-style: normal;
+  font-weight: 400;
+  font-size: clamp(32px, 3.5vw, 64px);
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.pipe-goal-equation {
+  font-family: 'Indie Flower', cursive;
+  font-style: normal;
+  font-weight: 400;
+  font-size: clamp(32px, 3.5vw, 64px);
+  color: #FFFFFF;
+}
+
+.check-button {
+  width: clamp(120px, 9vw, 172px);
+  height: clamp(45px, 6vh, 63px);
+  background: #3E907D;
+  border: none;
+  cursor: pointer;
+  font-family: 'Indie Flower', cursive;
+  font-style: normal;
+  font-weight: 400;
+  font-size: clamp(24px, 2.5vw, 40px);
+  color: #FFFFFF;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.check-button:hover {
+  background: #2d6f5e;
+}
+
+/* Pipe Images Container */
+.pipe-images-container {
+  position: absolute;
+  width: 100%;
+  top: 15%;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(40px, 5vw, 100px);
+  padding: 2vw;
+}
+
+.pipe-image {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  border: 2px solid transparent;
+}
+
+.pipe-image:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.pipe-image-1 {
+  width: clamp(200px, 16vw, 314px);
+  height: clamp(160px, 13vw, 252px);
+}
+
+.pipe-image-2 {
+  width: clamp(200px, 16vw, 314px);
+  height: clamp(106px, 8.7vw, 167px);
+}
+
+.pipe-image-3 {
+  width: clamp(200px, 16vw, 314px);
+  height: clamp(160px, 13vw, 252px);
+}
+
+.pipe-image-4 {
+  width: clamp(200px, 16vw, 314px);
+  height: clamp(160px, 13vw, 252px);
+}
+
+.pipe-icon-1 {
+  width: clamp(100px, 8vw, 155px);
+  height: clamp(60px, 4.7vw, 91px);
+}
+
+.pipe-icon-2 {
+  width: clamp(56px, 4.5vw, 86px);
+  height: clamp(60px, 4.7vw, 91px);
+}
+
+/* Divider Line */
+.divider-line {
+  position: absolute;
+  width: 100%;
+  top: 46%;
+  left: 0;
+  border: none;
+  border-top: clamp(15px, 1.5vw, 30px) dashed #BDC700;
+  margin: 0;
+}
+
+/* Pipe Equation Section */
+.pipe-equation-section {
+  position: absolute;
+  width: clamp(400px, 37vw, 715px);
+  height: clamp(45px, 5.6vh, 61px);
+  top: 51%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #BDC700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.pipe-equation-text {
+  font-family: 'Inconsolata', monospace;
+  font-style: normal;
+  font-weight: 800;
+  font-size: clamp(24px, 2.5vw, 48px);
+  color: #FCFCFC;
+}
+
+/* Pipe Display */
+.pipe-display {
+  position: absolute;
+  width: clamp(700px, 72vw, 1393px);
+  height: clamp(50px, 7.7vh, 83px);
+  top: 60%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Bottom Section */
+.bottom-section {
+  position: absolute;
+  width: 100%;
+  height: clamp(180px, 25vh, 271px);
+  bottom: 0;
+  left: 0;
+  background: #757171;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vh, 20px);
+}
+
+/* Ruler Numbers */
+.ruler-numbers {
+  font-family: 'Homemade Apple', cursive;
+  font-style: normal;
+  font-weight: 400;
+  font-size: clamp(16px, 1.4vw, 27px);
+  color: #FFFEFE;
+  letter-spacing: clamp(6px, 0.6vw, 12px);
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Bottom Info Controls */
+.bottom-info {
+  display: flex;
+  gap: clamp(10px, 1vw, 20px);
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.control-button {
+  height: clamp(45px, 5.6vh, 61px);
+  border: none;
+  cursor: pointer;
+  font-family: 'Inconsolata', monospace;
+  font-style: normal;
+  font-weight: 800;
+  border-radius: 8px;
+  transition: opacity 0.3s;
+  padding: 0 15px;
+}
+
+.control-button:hover {
+  opacity: 0.8;
+}
+
+.undo-button {
+  min-width: clamp(100px, 7.3vw, 141px);
+  background: #000000;
+  font-size: clamp(24px, 2.1vw, 40px);
+  color: #FCFC64;
+}
+
+.reset-button {
+  min-width: clamp(100px, 7.3vw, 141px);
+  background: #000000;
+  font-size: clamp(20px, 1.8vw, 35px);
+  color: #EE0000;
+}
+
+.open-valve-button {
+  min-width: clamp(160px, 12vw, 233px);
+  background: #000000;
+  font-size: clamp(20px, 1.8vw, 35px);
+  color: #00F90C;
+}
+
+/* Back button overlay */
+.game-header-nav {
+  position: absolute;
+  top: clamp(15px, 2vh, 20px);
+  right: clamp(15px, 2vw, 20px);
+  z-index: 1000;
+}
+
+.back-btn {
+  padding: clamp(8px, 1vh, 12px) clamp(16px, 2vw, 24px);
+  font-size: clamp(14px, 1.2vw, 18px);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 2px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Indie Flower', cursive;
+}
+
+.back-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.05);
+}
+
+/* Responsive font loading fallbacks */
+@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&family=Homemade+Apple&family=Inconsolata:wght@800&display=swap');
