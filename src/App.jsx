@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import GameScreen from './GameScreen'
+import OptionsScreen from './OptionsScreen'
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('menu')
@@ -12,7 +13,7 @@ function App() {
 
   const handleOptions = () => {
     console.log('Options clicked')
-    // Will navigate to options screen later
+    setCurrentScreen('options')
   }
 
   const handleQuit = () => {
@@ -40,6 +41,10 @@ function App() {
         <GameScreen />
       </div>
     )
+  }
+
+  if (currentScreen === 'options') {
+    return <OptionsScreen onBack={() => setCurrentScreen('menu')} />
   }
 
   return (

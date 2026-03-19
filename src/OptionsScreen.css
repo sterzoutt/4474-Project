@@ -1,0 +1,475 @@
+@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&family=Homemade+Apple&family=Inconsolata:wght@800&display=swap');
+
+.options-screen {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #274C43;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px 20px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.back-button {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #757171;
+  border: 3px solid #4a4747;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-family: 'Inconsolata', monospace;
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  box-shadow: 
+    0 4px 0 #4a4747,
+    0 6px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background: #8a8585;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 0 #4a4747,
+    0 8px 12px rgba(0, 0, 0, 0.6);
+}
+
+.back-button:active {
+  transform: translateY(2px);
+  box-shadow: 
+    0 2px 0 #4a4747,
+    0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+.back-icon {
+  font-size: 18px;
+}
+
+.settings-header {
+  width: 100%;
+  max-width: 680px;
+  background: #3E907D;
+  border: 4px solid #2d6f5e;
+  border-radius: 15px;
+  padding: 15px 30px;
+  margin-bottom: 12px;
+  margin-top: 60px;
+  box-shadow: 
+    0 5px 0 #2d6f5e,
+    0 8px 15px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+.settings-panel {
+  background: linear-gradient(180deg, #3E907D 0%, #2d6f5e 100%);
+  border: 4px solid #2d6f5e;
+  border-radius: 18px;
+  padding: 30px 40px;
+  max-width: 680px;
+  width: 100%;
+  box-shadow: 
+    0 6px 0 #1f4d42,
+    0 10px 20px rgba(0, 0, 0, 0.7);
+  position: relative;
+}
+
+.settings-title {
+  text-align: center;
+  font-family: 'Indie Flower', cursive;
+  font-size: 38px;
+  font-weight: bold;
+  color: #FFFFFF;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+  margin: 0;
+  letter-spacing: 6px;
+}
+
+.panel-screw {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: radial-gradient(circle, #1a3a30 30%, #2d6f5e 70%, #3E907D);
+  border-radius: 50%;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.8),
+    0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.panel-screw::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.6);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.panel-screw.top-left {
+  top: 12px;
+  left: 12px;
+}
+
+.panel-screw.top-right {
+  top: 12px;
+  right: 12px;
+}
+
+.panel-screw.bottom-left {
+  bottom: 12px;
+  left: 12px;
+}
+
+.panel-screw.bottom-right {
+  bottom: 12px;
+  right: 12px;
+}
+
+.settings-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-family: 'Inconsolata', monospace;
+  font-size: 22px;
+  font-weight: 800;
+  color: #FFFFFF;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin: 0 0 12px 0;
+  padding-left: 3px;
+}
+
+/* Difficulty Buttons */
+.difficulty-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.difficulty-btn {
+  flex: 1;
+  padding: 12px 20px;
+  font-family: 'Inconsolata', monospace;
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  background: #757171;
+  border: 3px solid #4a4747;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 
+    0 4px 0 #4a4747,
+    0 6px 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.15s;
+}
+
+.difficulty-btn:hover {
+  background: #8a8585;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 0 #4a4747,
+    0 8px 12px rgba(0, 0, 0, 0.6);
+}
+
+.difficulty-btn.active {
+  background: #BDC700;
+  color: #274C43;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  border-color: #8a9300;
+  box-shadow: 
+    0 4px 0 #8a9300,
+    0 6px 10px rgba(0, 0, 0, 0.5);
+}
+
+.difficulty-btn:active {
+  transform: translateY(2px);
+  box-shadow: 
+    0 2px 0 #4a4747,
+    0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Audio Controls */
+.audio-control {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.audio-label {
+  font-family: 'Inconsolata', monospace;
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  min-width: 80px;
+}
+
+/* Toggle Button */
+.toggle-btn {
+  position: relative;
+  width: 95px;
+  height: 35px;
+  background: #757171;
+  border: 3px solid #4a4747;
+  border-radius: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  box-shadow: 
+    inset 0 2px 5px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s;
+}
+
+.toggle-off,
+.toggle-on {
+  font-family: 'Inconsolata', monospace;
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.5);
+  z-index: 2;
+  transition: all 0.3s;
+}
+
+.toggle-btn.off .toggle-off {
+  color: #FFFFFF;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.toggle-btn.on .toggle-on {
+  color: #FFFFFF;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.toggle-btn::before {
+  content: '';
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  background: #BDC700;
+  border-radius: 20px;
+  transition: all 0.3s;
+  left: 0;
+  box-shadow: 
+    0 2px 5px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.toggle-btn.on::before {
+  left: 50%;
+}
+
+/* Volume Control */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.volume-icon {
+  font-size: 22px;
+  color: #FFFFFF;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.volume-slider {
+  flex: 1;
+  height: 12px;
+  background: #274C43;
+  border: 3px solid #1f4d42;
+  border-radius: 8px;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: 
+    inset 0 2px 5px rgba(0, 0, 0, 0.6),
+    0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+.volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  background: #BDC700;
+  border: 3px solid #8a9300;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  background: #BDC700;
+  border: 3px solid #8a9300;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.volume-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.volume-value {
+  min-width: 55px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #274C43;
+  border: 3px solid #1f4d42;
+  border-radius: 8px;
+  font-family: 'Inconsolata', monospace;
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 
+    inset 0 2px 5px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(255, 255, 255, 0.1);
+  padding: 0 12px;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.action-btn {
+  padding: 12px 40px;
+  font-family: 'Inconsolata', monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: #FFFFFF;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  background: #757171;
+  border: 3px solid #4a4747;
+  border-radius: 15px;
+  cursor: pointer;
+  box-shadow: 
+    0 5px 0 #4a4747,
+    0 7px 12px rgba(0, 0, 0, 0.5);
+  transition: all 0.15s;
+  min-width: 150px;
+}
+
+.action-btn:hover {
+  background: #8a8585;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 7px 0 #4a4747,
+    0 9px 15px rgba(0, 0, 0, 0.6);
+}
+
+.action-btn:active {
+  transform: translateY(3px);
+  box-shadow: 
+    0 2px 0 #4a4747,
+    0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Bottom Action Buttons */
+.bottom-action-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .options-screen {
+    padding: 10px 15px;
+  }
+
+  .settings-header {
+    padding: 12px 20px;
+    margin-top: 50px;
+  }
+
+  .settings-title {
+    font-size: 28px;
+    letter-spacing: 4px;
+  }
+
+  .settings-panel {
+    padding: 20px 25px;
+  }
+
+  .section-title {
+    font-size: 18px;
+  }
+
+  .difficulty-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .difficulty-btn {
+    font-size: 16px;
+  }
+
+  .audio-control {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .audio-label {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .toggle-btn {
+    width: 85px;
+    height: 30px;
+  }
+
+  .volume-control {
+    width: 100%;
+    flex: none;
+  }
+
+  .action-buttons,
+  .bottom-action-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .action-btn {
+    width: 100%;
+    min-width: auto;
+    font-size: 18px;
+    padding: 12px 30px;
+  }
+}
