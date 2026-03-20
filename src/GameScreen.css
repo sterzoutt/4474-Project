@@ -20,7 +20,8 @@
 .top-section {
   position: absolute;
   top: 3%;
-  left: 3%;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 1.5vw;
@@ -33,6 +34,11 @@
   font-size: clamp(32px, 3.5vw, 64px);
   color: #FFFFFF;
   white-space: nowrap;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  left: 50%
+
 }
 
 .pipe-goal-equation {
@@ -264,6 +270,3 @@
   background: rgba(0, 0, 0, 0.9);
   transform: scale(1.05);
 }
-
-/* Responsive font loading fallbacks */
-@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&family=Homemade+Apple&family=Inconsolata:wght@800&display=swap');
