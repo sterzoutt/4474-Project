@@ -48,7 +48,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app home-screen">
       <div className="menu-container">
         <h1 className="game-title">Fitting Pipes</h1>
         
