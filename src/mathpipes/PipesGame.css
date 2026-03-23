@@ -126,9 +126,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 18px 4px;
-  gap: 0;
-  overflow: hidden;
+  /* Center the game board vertically; gap replaces the old flex:1 stretch */
+  justify-content: center;
+  padding: 4px 18px 4px;
+  gap: 6px;
+  /* visible so START/TARGET badges are not clipped above/below the area;
+     pg-scene already has overflow:hidden to clip the viewport boundary */
+  overflow: visible;
 }
 
 /* ── Downward scene transitions ── */
@@ -188,10 +192,13 @@
   width: 100%;
 }
 
-/* Extra space above for the START badge */
-.pg-mpipe-top  { padding-top: 42px; }
-/* Extra space below for the TARGET badge */
-.pg-mpipe-bot  { padding-bottom: 42px; }
+/* Extra space above for the START badge.
+   Badge is ~56px tall, pin is at bottom:62px, so element height must be
+   at least 118px to keep the badge fully inside: 62px + 56px = 118px.
+   With barrel=58px: padding-top = 118-58 = 60px. Use 64px for safety. */
+.pg-mpipe-top  { padding-top: 64px; }
+/* Extra space below for the TARGET badge (same logic). */
+.pg-mpipe-bot  { padding-bottom: 64px; }
 
 /* ── Pipe barrel ── */
 .pg-barrel {
@@ -364,12 +371,14 @@
    PATH ZONE
    ============================================================ */
 .pg-path-zone {
-  flex: 1;
-  min-height: 0;
+  /* flex-shrink: 0 prevents the path zone from growing/shrinking to fill
+     leftover space in pg-pipes-area — that was what caused the large
+     empty gap in the centre of the screen */
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
   width: 100%;
   max-width: 820px;
@@ -849,17 +858,19 @@
    RESPONSIVE
    ============================================================ */
 @media (max-width: 640px) {
-  .pg-pipes-area { padding: 6px 10px 2px; }
+  .pg-pipes-area { padding: 4px 10px 4px; gap: 4px; }
   .pg-barrel     { height: 50px; }
-  .pg-tline      { }
   .pg-tick-min .pg-tline { height: 7px; }
   .pg-tick-maj .pg-tline { height: 14px; }
   .pg-tick-hi  .pg-tline { height: 14px; }
   .pg-mb-val     { font-size: 22px; }
   .pg-mbadge     { padding: 2px 9px; }
   .pg-mb-lbl     { font-size: 8px; }
-  .pg-mpipe-top  { padding-top: 34px; }
-  .pg-mpipe-bot  { padding-bottom: 34px; }
+  /* Mobile badge is ~48px tall; at bottom:54px, height=50+padding needed:
+     48+54 = 102px → padding-top = 102-50 = 52px → use 56px for safety */
+  .pg-mpipe-top  { padding-top: 56px; }
+  .pg-mpipe-bot  { padding-bottom: 56px; }
+  /* Badge pin anchored to mobile barrel height */
   .pg-mbw-above  { bottom: calc(50px + 4px); }
   .pg-mbw-below  { top:    calc(50px + 4px); }
   .pg-pslot      { min-width: 70px; height: 54px; }

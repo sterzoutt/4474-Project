@@ -271,10 +271,13 @@ function PipesGame({ mode, onBack }) {
     return () => clearTimeout(t)
   }, [gameState])
 
-  // ── Transition: exit → (increment question or end) → enter ───────────────
+  // ── Transition: exit → advance question (or end session) ────────────────
+  // IMPORTANT: do NOT use a nested setTimeout here.
+  // The cleanup function captures outer variables by closure, so any t2
+  // assigned inside the callback would be cancelled when transPhase changes.
+  // Use two separate effects (one per phase) to avoid that race condition.
   useEffect(() => {
     if (transPhase !== 'exit') return
-    let t2
     const t = setTimeout(() => {
       if (qRef.current >= GAME_LENGTH) {
         setSessionDone(true)
@@ -282,10 +285,16 @@ function PipesGame({ mode, onBack }) {
       } else {
         setQuestionNum((q) => q + 1)
         setTransPhase('enter')
-        t2 = setTimeout(() => setTransPhase(null), 420)
       }
     }, 360)
-    return () => { clearTimeout(t); clearTimeout(t2) }
+    return () => clearTimeout(t)
+  }, [transPhase])
+
+  // ── Transition: enter → clear, making the next puzzle fully interactive ──
+  useEffect(() => {
+    if (transPhase !== 'enter') return
+    const t = setTimeout(() => setTransPhase(null), 420)
+    return () => clearTimeout(t)
   }, [transPhase])
 
   // ── Interactions ──────────────────────────────────────────────────────────
