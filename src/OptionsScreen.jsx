@@ -1,176 +1,69 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import './OptionsScreen.css'
 
-function OptionsScreen({ onBack }) {
-  // Load settings from localStorage or use defaults
-  const loadSettings = () => {
-    const saved = localStorage.getItem('gameSettings')
-    if (saved) {
-      return JSON.parse(saved)
-    }
-    return {
-      difficulty: 'Normal',
-      soundEnabled: true,
-      musicEnabled: true,
-      soundVolume: 80,
-      musicVolume: 80
-    }
-  }
+const MODES = [
+  {
+    key: 'addition',
+    symbol: '+',
+    title: 'Addition',
+    desc: 'Build a path using only addition',
+    color: '#4ea64e',
+    glow: 'rgba(78,166,78,0.4)',
+  },
+  {
+    key: 'subtraction',
+    symbol: '−',
+    title: 'Subtraction',
+    desc: 'Build a path using only subtraction',
+    color: '#c0392b',
+    glow: 'rgba(192,57,43,0.4)',
+  },
+  {
+    key: 'mixed',
+    symbol: '±',
+    title: 'Mixed',
+    desc: 'Toggle each pipe between + and −',
+    color: '#2980b9',
+    glow: 'rgba(41,128,185,0.4)',
+  },
+]
 
-  const [settings, setSettings] = useState(loadSettings())
-  const [tempSettings, setTempSettings] = useState(loadSettings())
+function OptionsScreen({ currentMode, onSave, onBack }) {
+  const [selected, setSelected] = useState(currentMode)
 
-  const handleDifficultyChange = (difficulty) => {
-    setTempSettings({ ...tempSettings, difficulty })
-  }
-
-  const handleSoundToggle = () => {
-    setTempSettings({ ...tempSettings, soundEnabled: !tempSettings.soundEnabled })
-  }
-
-  const handleMusicToggle = () => {
-    setTempSettings({ ...tempSettings, musicEnabled: !tempSettings.musicEnabled })
-  }
-
-  const handleSoundVolumeChange = (e) => {
-    setTempSettings({ ...tempSettings, soundVolume: parseInt(e.target.value) })
-  }
-
-  const handleMusicVolumeChange = (e) => {
-    setTempSettings({ ...tempSettings, musicVolume: parseInt(e.target.value) })
-  }
-
-  const handleSave = () => {
-    localStorage.setItem('gameSettings', JSON.stringify(tempSettings))
-    setSettings(tempSettings)
-    alert('Settings saved!')
-  }
-
-  const handleReset = () => {
-    const defaultSettings = {
-      difficulty: 'Normal',
-      soundEnabled: true,
-      musicEnabled: true,
-      soundVolume: 80,
-      musicVolume: 80
-    }
-    setTempSettings(defaultSettings)
+  const handleSelect = (key) => {
+    setSelected(key)
+    localStorage.setItem('gameMode', key)
   }
 
   return (
-    <div className="options-screen">
-      <button className="back-button" onClick={onBack}>
-        <span className="back-icon">🏠</span> Back
-      </button>
+    <div className="opt-screen">
+      <button className="opt-back-btn" onClick={onBack}>&#8592; Back</button>
 
-      <div className="settings-header">
-        <h1 className="settings-title">SETTINGS</h1>
-      </div>
-
-      <div className="settings-panel">
-        <div className="panel-screw top-left"></div>
-        <div className="panel-screw top-right"></div>
-        <div className="panel-screw bottom-left"></div>
-        <div className="panel-screw bottom-right"></div>
-
-        {/* Difficulty Section */}
-        <div className="settings-section">
-          <h2 className="section-title">Difficulty</h2>
-          <div className="difficulty-buttons">
-            <button
-              className={`difficulty-btn ${tempSettings.difficulty === 'Easy' ? 'active' : ''}`}
-              onClick={() => handleDifficultyChange('Easy')}
-            >
-              Easy
-            </button>
-            <button
-              className={`difficulty-btn ${tempSettings.difficulty === 'Normal' ? 'active' : ''}`}
-              onClick={() => handleDifficultyChange('Normal')}
-            >
-              Normal
-            </button>
-            <button
-              className={`difficulty-btn ${tempSettings.difficulty === 'Hard' ? 'active' : ''}`}
-              onClick={() => handleDifficultyChange('Hard')}
-            >
-              Hard
-            </button>
-          </div>
+      <div className="opt-content">
+        <div className="opt-header">
+          <h1 className="opt-title">Game Mode</h1>
+          <p className="opt-subtitle">How do your pipes connect?</p>
         </div>
 
-        {/* Audio Section */}
-        <div className="settings-section">
-          <h2 className="section-title">Audio</h2>
-
-          {/* Sound Controls */}
-          <div className="audio-control">
-            <label className="audio-label">Sound</label>
+        <div className="opt-mode-grid">
+          {MODES.map((m) => (
             <button
-              className={`toggle-btn ${tempSettings.soundEnabled ? 'on' : 'off'}`}
-              onClick={handleSoundToggle}
+              key={m.key}
+              className={`opt-mode-card ${selected === m.key ? 'active' : ''}`}
+              style={{ '--card-color': m.color, '--card-glow': m.glow }}
+              onClick={() => handleSelect(m.key)}
             >
-              <span className="toggle-off">OFF</span>
-              <span className="toggle-on">ON</span>
+              <span className="opt-mode-symbol">{m.symbol}</span>
+              <span className="opt-mode-title">{m.title}</span>
+              <span className="opt-mode-desc">{m.desc}</span>
+              {selected === m.key && <span className="opt-mode-check">✓</span>}
             </button>
-            <div className="volume-control">
-              <span className="volume-icon">🔊</span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={tempSettings.soundVolume}
-                onChange={handleSoundVolumeChange}
-                className="volume-slider"
-                disabled={!tempSettings.soundEnabled}
-              />
-              <span className="volume-value">{tempSettings.soundVolume}</span>
-            </div>
-          </div>
-
-          {/* Music Controls */}
-          <div className="audio-control">
-            <label className="audio-label">Music</label>
-            <button
-              className={`toggle-btn ${tempSettings.musicEnabled ? 'on' : 'off'}`}
-              onClick={handleMusicToggle}
-            >
-              <span className="toggle-off">OFF</span>
-              <span className="toggle-on">ON</span>
-            </button>
-            <div className="volume-control">
-              <span className="volume-icon">🎵</span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={tempSettings.musicVolume}
-                onChange={handleMusicVolumeChange}
-                className="volume-slider"
-                disabled={!tempSettings.musicEnabled}
-              />
-              <span className="volume-value">{tempSettings.musicVolume}</span>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          <button className="action-btn save-btn" onClick={handleSave}>
-            Save
-          </button>
-          <button className="action-btn reset-btn" onClick={handleReset}>
-            Reset
-          </button>
-        </div>
-      </div>
-
-      {/* Bottom Action Buttons */}
-      <div className="bottom-action-buttons">
-        <button className="action-btn save-btn" onClick={handleSave}>
-          Save
-        </button>
-        <button className="action-btn reset-btn" onClick={handleReset}>
-          Reset
+        <button className="opt-save-btn" onClick={() => onSave(selected)}>
+          Save &amp; Play
         </button>
       </div>
     </div>

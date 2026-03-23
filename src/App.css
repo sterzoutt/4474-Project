@@ -133,6 +133,17 @@ body {
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
+.menu-mode-hint {
+  font-family: 'Indie Flower', cursive;
+  font-size: 1.1rem;
+  color: rgba(216, 255, 216, 0.6);
+  margin: -1rem 0 0;
+}
+.menu-mode-val {
+  color: #7bcf76;
+  font-weight: bold;
+}
+
 .home-screen .menu-buttons {
   display: flex;
   flex-direction: column;

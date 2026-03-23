@@ -1,67 +1,60 @@
 import { useState } from 'react'
 import './App.css'
-import GameScreen from './GameScreen'
 import OptionsScreen from './OptionsScreen'
+import PipesGame     from './mathpipes/PipesGame'
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('menu')
+  // Mode persists in localStorage so it survives a refresh
+  const [gameMode, setGameMode] = useState(
+    () => localStorage.getItem('gameMode') || 'addition'
+  )
 
-  const handlePlay = () => {
-    console.log('Play clicked')
-    setCurrentScreen('game')
-  }
+  const handlePlay = () => setCurrentScreen('game')
 
-  const handleOptions = () => {
-    console.log('Options clicked')
-    setCurrentScreen('options')
-  }
+  const handleOptions = () => setCurrentScreen('options')
 
   const handleQuit = () => {
-    console.log('Quit clicked')
-    // Try to close the window/tab
     window.close()
-    // If window.close() doesn't work (some browsers prevent it), navigate away
-    if (!window.closed) {
-      window.location.href = 'about:blank'
-    }
+    if (!window.closed) window.location.href = 'about:blank'
   }
 
-  // Render different screens based on currentScreen state
-  if (currentScreen === 'game') {
-    return (
-      <div>
-        <div className="game-header-nav">
-          <button 
-            className="back-btn"
-            onClick={() => setCurrentScreen('menu')}
-          >
-            ← Back to Menu
-          </button>
-        </div>
-        <GameScreen />
-      </div>
-    )
+  const handleModeSave = (mode) => {
+    localStorage.setItem('gameMode', mode)
+    setGameMode(mode)
+    setCurrentScreen('menu')
   }
 
   if (currentScreen === 'options') {
-    return <OptionsScreen onBack={() => setCurrentScreen('menu')} />
+    return (
+      <OptionsScreen
+        currentMode={gameMode}
+        onSave={handleModeSave}
+        onBack={() => setCurrentScreen('menu')}
+      />
+    )
   }
+
+  if (currentScreen === 'game') {
+    return <PipesGame mode={gameMode} onBack={() => setCurrentScreen('menu')} />
+  }
+
+  // ── Main menu ──────────────────────────────────────────────
+  const modeLabel = { addition: '+ Addition', subtraction: '− Subtraction', mixed: '± Mixed' }
 
   return (
     <div className="app home-screen">
       <div className="menu-container">
         <h1 className="game-title">Fitting Pipes</h1>
-        
+
+        <p className="menu-mode-hint">
+          Mode: <span className="menu-mode-val">{modeLabel[gameMode]}</span>
+        </p>
+
         <div className="menu-buttons">
-          <button className="menu-btn" onClick={handlePlay}>
-            PLAY
-          </button>
-          <button className="menu-btn" onClick={handleOptions}>
-            OPTIONS
-          </button>
-          <button className="menu-btn" onClick={handleQuit}>
-            QUIT
-          </button>
+          <button className="menu-btn" onClick={handlePlay}>PLAY</button>
+          <button className="menu-btn" onClick={handleOptions}>OPTIONS</button>
+          <button className="menu-btn" onClick={handleQuit}>QUIT</button>
         </div>
       </div>
     </div>
