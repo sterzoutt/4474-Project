@@ -1,7 +1,9 @@
 /* ============================================================
-   PipesGame — visual pipe-puzzle scene
-   Dark factory theme, kid-friendly scale, pipe-green palette.
-   Water animation uses filter:hue-rotate to turn green→blue.
+   PipesGame.css — visual pipe-puzzle scene
+   Top/bottom = ruler-marked measurement pipes
+   Middle = active path slots
+   Bottom tray = available pipe pieces
+   Water animation: hue-rotate green→blue with cascade delays
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
@@ -11,28 +13,28 @@
   width: 100vw;
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 50% 0%,   #1a3a1a 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 100%, #0a1f0a 0%, transparent 60%),
-    linear-gradient(180deg, #0d1a0d 0%, #071207 100%);
+    radial-gradient(ellipse at 50% 0%,   #152815 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, #0b1f0b 0%, transparent 55%),
+    linear-gradient(180deg, #0c1a0c 0%, #060e06 100%);
   display: flex;
   flex-direction: column;
   align-items: stretch;
   font-family: 'Indie Flower', cursive;
-  color: #d8ffd8;
+  color: #d4f5d4;
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
 }
 
-/* Subtle grid texture */
+/* Tile texture */
 .pg-scene::before {
   content: '';
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 36px 36px;
   pointer-events: none;
   z-index: 0;
 }
@@ -40,13 +42,13 @@
 /* ── Header ───────────────────────────────────────────────── */
 .pg-header {
   position: relative;
-  z-index: 10;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  background: rgba(0,0,0,0.45);
-  border-bottom: 2px solid rgba(78,166,78,0.2);
+  padding: 9px 16px;
+  background: rgba(0,0,0,0.5);
+  border-bottom: 2px solid rgba(90,160,90,0.25);
   flex-shrink: 0;
 }
 
@@ -67,201 +69,244 @@
 .pg-mode-pill {
   font-size: 15px;
   font-weight: bold;
-  color: rgba(216,255,216,0.75);
-  text-transform: capitalize;
+  color: rgba(210,255,210,0.8);
   letter-spacing: 1px;
 }
 
-.pg-stats { display: flex; gap: 16px; align-items: center; }
-.pg-level  { font-size: 15px; color: rgba(216,255,216,0.7); }
-.pg-score  { font-size: 17px; font-weight: bold; color: #ffe082; }
+.pg-stats { display: flex; gap: 14px; align-items: center; }
+.pg-level { font-size: 14px; color: rgba(210,255,210,0.65); }
+.pg-score { font-size: 17px; font-weight: bold; color: #ffe082; }
 
-/* ── Game layout wrapper ──────────────────────────────────── */
-.pg-game-wrap {
+/* ── Main content column ──────────────────────────────────── */
+.pg-content {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 20px 0;
+  padding: 16px 20px 0;
   gap: 0;
-  flex-shrink: 0;
+  flex: 1;
 }
 
 /* ============================================================
-   HORIZONTAL PIPES  (top + bottom)
+   MEASUREMENT PIPES (top + bottom)
    ============================================================ */
-.pg-h-pipe {
+
+/* Top row: pipe + valve side by side */
+.pg-top-row {
   width: 100%;
-  max-width: 720px;
-  height: 68px;
+  max-width: 780px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 18px;
-  box-sizing: border-box;
-  border-radius: 12px;
-  position: relative;
-  overflow: visible;
-
-  /* Pipe metal gradient */
-  background: linear-gradient(180deg,
-    #5a8a5a  0%,
-    #2e5a2e 20%,
-    #1a3e1a 50%,
-    #264626 80%,
-    #4a7a4a 100%
-  );
-  border-top:    4px solid #7aaa6a;
-  border-bottom: 4px solid #0a1a0a;
-  box-shadow:
-    0 6px 24px rgba(0,0,0,0.6),
-    inset 0 2px 8px rgba(255,255,255,0.08),
-    inset 0 -2px 4px rgba(0,0,0,0.3);
 }
 
-/* Fill span — takes remaining width, shows the pipe body highlight */
-.pg-pipe-body-fill {
-  flex: 1;
-  height: 28px;
-  background: linear-gradient(180deg,
-    rgba(255,255,255,0.06) 0%,
-    transparent 50%,
-    rgba(0,0,0,0.15) 100%
-  );
-  border-radius: 4px;
-}
+.pg-top-pipe-wrap { flex: 1; min-width: 0; }
 
-/* Bolt decorations at pipe ends */
-.pg-bolt {
-  display: block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #888, #444);
-  border: 2px solid #333;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  flex-shrink: 0;
-}
-
-/* ── START badge ── */
-.pg-start-badge {
+/* Valve block (right of top pipe) */
+.pg-valve-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: linear-gradient(135deg, #f97316, #c2410c);
-  border: 3px solid #fed7aa;
-  border-radius: 14px;
-  padding: 4px 14px;
-  box-shadow: 0 4px 12px rgba(249,115,22,0.45);
-  flex-shrink: 0;
-  line-height: 1.1;
-}
-.pg-badge-label { font-size: 10px; letter-spacing: 2px; color: #fed7aa; }
-.pg-badge-num   { font-size: 26px; font-weight: bold; color: #fff; }
-
-/* ── TARGET badge ── */
-.pg-target-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: linear-gradient(135deg, #0891b2, #0c4a6e);
-  border: 3px solid #7dd3fc;
-  border-radius: 14px;
-  padding: 4px 14px;
-  box-shadow: 0 4px 12px rgba(8,145,178,0.45);
-  flex-shrink: 0;
-  line-height: 1.1;
-  margin-left: auto;
-}
-
-/* ── Drain opening ── */
-.pg-drain {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 36px;
-  background: linear-gradient(180deg, #1a3a1a, #0a1a0a);
-  border: 2px solid #2a4a2a;
-  border-radius: 0 0 8px 8px;
+  gap: 3px;
   flex-shrink: 0;
 }
-.pg-drain-icon {
-  font-size: 12px;
-  color: rgba(216,255,216,0.4);
-}
-
-/* ── Valve area ── */
-.pg-valve-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
-.pg-valve-hint {
+.pg-valve-lbl {
   font-size: 11px;
-  color: rgba(216,255,216,0.55);
-  letter-spacing: 1px;
+  font-weight: bold;
+  color: rgba(210,255,210,0.6);
+  letter-spacing: 0.5px;
+  text-align: center;
+  min-height: 16px;
 }
 
-/* ── Valve SVG ── */
-.pg-valve {
-  cursor: pointer;
-  transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), filter 0.3s;
-  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
-  display: block;
+/* Measurement pipe wrapper (handles the floating badge space) */
+.pg-mpipe {
+  position: relative;
+  width: 100%;
 }
-.pg-valve:hover { filter: drop-shadow(0 4px 10px rgba(78,166,78,0.5)) brightness(1.1); }
 
-.pg-valve-ready {
-  filter: drop-shadow(0 0 10px rgba(34,197,94,0.7));
-  animation: valvePulse 1s ease infinite alternate;
-}
-.pg-valve-open  { transform: rotate(90deg); filter: drop-shadow(0 0 14px rgba(56,189,248,0.8)); }
-.pg-valve-failed { animation: valveShake 0.45s ease; filter: drop-shadow(0 0 8px rgba(239,68,68,0.8)); }
+/* Extra top space for the badge on the top pipe */
+.pg-mpipe-top  { padding-top: 38px; }
+/* Extra bottom space for the badge on the bottom pipe */
+.pg-mpipe-bottom { padding-bottom: 38px; }
 
-@keyframes valvePulse {
-  from { filter: drop-shadow(0 0 6px rgba(34,197,94,0.5)); }
-  to   { filter: drop-shadow(0 0 16px rgba(34,197,94,0.9)); }
+/* The pipe barrel itself */
+.pg-mpipe-barrel {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  border-radius: 10px;
+  overflow: hidden;
+
+  background: linear-gradient(180deg,
+    #6a9a6a  0%,
+    #385e38 18%,
+    #1e401e 45%,
+    #274827 75%,
+    #507050 100%
+  );
+  border-top:    4px solid #7dae6d;
+  border-bottom: 4px solid #0b1b0b;
+  box-shadow:
+    0 6px 20px rgba(0,0,0,0.65),
+    inset 0 3px 10px rgba(255,255,255,0.07),
+    inset 0 -2px 5px rgba(0,0,0,0.35);
 }
-@keyframes valveShake {
-  0%,100% { transform: rotate(0deg); }
-  20%     { transform: rotate(-12deg); }
-  40%     { transform: rotate(12deg); }
-  60%     { transform: rotate(-8deg); }
-  80%     { transform: rotate(8deg); }
+
+/* Scale tick marks (absolutely positioned inside barrel) */
+.pg-scale-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 6px;
+}
+
+.pg-scale-tick {
+  width: 1px;
+  height: 16px;
+  background: rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+
+.pg-scale-num {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1;
+  margin-top: 2px;
+  font-family: monospace;
+  letter-spacing: -0.5px;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Coloured pin at the exact value */
+.pg-scale-pin {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  z-index: 3;
+}
+.pg-pin-start  { background: linear-gradient(180deg, #fed7aa, #f97316, #c2410c); box-shadow: 0 0 8px rgba(249,115,22,0.8); }
+.pg-pin-target { background: linear-gradient(180deg, #7dd3fc, #0891b2, #0c4a6e); box-shadow: 0 0 8px rgba(8,145,178,0.8); }
+
+/* Pipe shine overlay */
+.pg-mpipe-shine {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 30%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.09) 0%, transparent 100%);
+  border-radius: 8px 8px 0 0;
+  pointer-events: none;
+}
+
+/* ── Floating marker badge ── */
+.pg-mmarker {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* TOP pipe: badge above the barrel */
+.pg-mmarker-top {
+  bottom: calc(60px + 4px); /* barrel height + border */
+}
+
+/* BOTTOM pipe: badge below the barrel */
+.pg-mmarker-bot {
+  top: calc(60px + 4px);
+}
+
+/* Downward arrow (below badge, pointing at pipe) */
+.pg-arrow-down {
+  width: 0; height: 0;
+  border-left:  7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top:   9px solid #f97316;
+}
+
+/* Upward arrow (above badge, pointing at pipe) */
+.pg-arrow-up {
+  width: 0; height: 0;
+  border-left:  7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 9px solid #0891b2;
+}
+
+/* Badge pill */
+.pg-mmarker-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 10px;
+  padding: 3px 14px;
+  line-height: 1.1;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+}
+.pg-mbadge-start  { background: linear-gradient(135deg, #f97316, #c2410c); border: 2px solid #fed7aa; }
+.pg-mbadge-target { background: linear-gradient(135deg, #0891b2, #0c4a6e); border: 2px solid #7dd3fc; }
+
+.pg-mmarker-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.75);
+  text-transform: uppercase;
+}
+.pg-mmarker-val {
+  font-size: 26px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
 /* ============================================================
    VERTICAL CONNECTORS
    ============================================================ */
-.pg-v-connector {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  background: linear-gradient(90deg,
-    #5a8a5a 0%, #2e5a2e 30%, #1a3e1a 70%, #3a6a3a 100%
-  );
+.pg-vconn {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(90deg, #608060 0%, #2e4e2e 35%, #1c3c1c 65%, #3a5a3a 100%);
   border-left:  3px solid #6a9a6a;
   border-right: 3px solid #0a1a0a;
   align-self: center;
+  flex-shrink: 0;
 }
 
 /* ============================================================
-   PATH AREA  (slot row + readout)
+   PATH ZONE  (slot row + equation strip)
    ============================================================ */
 .pg-path-zone {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  max-width: 720px;
-  padding: 8px 0;
+  max-width: 780px;
+  padding: 4px 0;
 }
 
+.pg-path-tip {
+  font-size: 13px;
+  color: rgba(210,255,210,0.45);
+  margin: 0;
+  min-height: 18px;
+  letter-spacing: 0.5px;
+}
+
+/* Slot row */
 .pg-path-row {
   display: flex;
   align-items: center;
@@ -270,164 +315,169 @@
   gap: 0;
 }
 
-/* Short connector between slots */
-.pg-path-join {
-  width: 22px;
-  height: 20px;
-  background: linear-gradient(180deg,
-    #5a8a5a 0%, #2e5a2e 30%, #1a3e1a 70%, #3a6a3a 100%
-  );
+/* Short horizontal connector between slots */
+.pg-pjoin {
+  width: 20px;
+  height: 18px;
+  background: linear-gradient(180deg, #608060 0%, #2e4e2e 35%, #1c3c1c 65%, #3a5a3a 100%);
   border-top:    2px solid #6a9a6a;
   border-bottom: 2px solid #0a1a0a;
   flex-shrink: 0;
 }
 
-/* ── Pipe slot (one segment in the path) ── */
-.pg-path-slot {
+/* ── Path slot (individual pipe segment) ── */
+.pg-pslot {
   position: relative;
-  height: 58px;
-  min-width: 88px;
+  display: flex;
+  align-items: center;
+  height: 60px;
+  min-width: 86px;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.15s;
+}
+
+/* Flange cap at each end */
+.pg-flange {
+  display: block;
+  width: 10px;
+  height: calc(100% + 14px);
+  margin: -7px 0;
+  background: linear-gradient(180deg, #506050, #243424, #1a2e1a, #3a4e3a);
+  border: 2px solid #2e3e2e;
+  border-radius: 4px;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+/* Pipe body between the flanges */
+.pg-pslot-body {
+  flex: 1;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: filter 0.2s, transform 0.15s;
-
-  background: linear-gradient(180deg,
-    #3a5a3a  0%,
-    #1e3e1e 35%,
-    #142e14 65%,
-    #2a4a2a 100%
-  );
+  flex-direction: column;
+  gap: 2px;
   border-top:    3px solid #5a7a5a;
   border-bottom: 3px solid #0a1a0a;
+  background: linear-gradient(180deg,
+    #3c5c3c  0%,
+    #1e3e1e 35%,
+    #122e12 65%,
+    #2c4c2c 100%
+  );
   box-shadow:
-    0 4px 12px rgba(0,0,0,0.5),
-    inset 0 2px 6px rgba(255,255,255,0.06);
+    inset 0 2px 6px rgba(255,255,255,0.06),
+    inset 0 -2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
 }
 
-/* Flanges (pipe end caps) via pseudo-elements */
-.pg-path-slot::before,
-.pg-path-slot::after {
-  content: '';
-  position: absolute;
-  top: -6px;
-  width: 10px;
-  height: calc(100% + 12px);
-  background: linear-gradient(180deg, #4a6e4a, #1a3a1a);
-  border: 2px solid #2e4e2e;
-  border-radius: 4px;
-  z-index: 2;
+/* Empty slot */
+.pg-pslot-empty .pg-pslot-body {
+  border-style: dashed;
+  border-color: rgba(210,255,210,0.2);
+  background: rgba(255,255,255,0.03);
 }
-.pg-path-slot::before { left:  -8px; }
-.pg-path-slot::after  { right: -8px; }
+.pg-pslot-empty:hover .pg-pslot-ph {
+  color: rgba(210,255,210,0.5);
+}
 
-.pg-slot-empty { cursor: pointer; }
-.pg-slot-empty:hover .pg-slot-ph { color: rgba(216,255,216,0.6); }
-
-.pg-slot-ready {
+/* Ready to receive a pipe */
+.pg-pslot-ready .pg-pslot-body {
+  border-style: solid;
   border-color: #ffe082;
-  box-shadow:
-    0 0 0 3px rgba(255,224,130,0.3),
-    0 4px 12px rgba(0,0,0,0.5);
-  animation: slotPulse 0.8s ease infinite alternate;
+  background: rgba(255,224,130,0.07);
+  animation: slotPulse 0.75s ease infinite alternate;
 }
 @keyframes slotPulse {
-  from { box-shadow: 0 0 0 2px rgba(255,224,130,0.2), 0 4px 10px rgba(0,0,0,0.4); }
-  to   { box-shadow: 0 0 0 4px rgba(255,224,130,0.5), 0 6px 14px rgba(0,0,0,0.5); }
+  from { box-shadow: inset 0 0 0 0 transparent; }
+  to   { box-shadow: inset 0 0 12px 2px rgba(255,224,130,0.2); }
 }
 
-.pg-slot-filled {
+/* Filled slot */
+.pg-pslot-filled .pg-pslot-body {
   background: linear-gradient(180deg,
-    #4a7a4a 0%, #2a5a2a 35%, #1a4a1a 65%, #3a6a3a 100%
+    #4e7a4e 0%, #2e5a2e 35%, #1e4e1e 65%, #3e6e3e 100%
   );
-  border-top-color: #8aaa7a;
-  cursor: pointer;
+  border-color: #8ab87a;
+  border-style: solid;
 }
-.pg-slot-filled:hover { filter: brightness(1.15); }
+.pg-pslot-filled:hover { filter: brightness(1.18); }
 
-.pg-slot-hinted {
-  box-shadow:
-    0 0 0 3px rgba(128,203,196,0.6),
-    0 0 18px rgba(128,203,196,0.4);
+/* Hint highlight */
+.pg-pslot-hint .pg-pslot-body {
+  box-shadow: inset 0 0 14px rgba(128,203,196,0.5), 0 0 18px rgba(128,203,196,0.35);
+  border-color: #80cbc4;
 }
 
-.pg-slot-ph  { font-size: 22px; color: rgba(216,255,216,0.2); }
-.pg-slot-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  position: relative;
-  z-index: 3;
-}
-.pg-slot-val  { font-size: 22px; font-weight: bold; color: #f3fff3; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+.pg-pslot-ph  { font-size: 22px; color: rgba(210,255,210,0.2); }
+.pg-pslot-val { font-size: 24px; font-weight: bold; color: #f3fff3; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
 
 /* Operator tag inside filled slot */
-.pg-op-tag {
-  font-size: 13px;
+.pg-optag {
+  font-size: 12px;
   font-family: 'Indie Flower', cursive;
   font-weight: bold;
-  color: #d8ffd8;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 6px;
-  padding: 1px 7px;
+  color: rgba(210,255,210,0.8);
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 5px;
+  padding: 1px 6px;
   cursor: default;
+  line-height: 1.2;
   transition: background 0.15s;
 }
-.pg-op-clickable {
-  cursor: pointer;
-  background: rgba(78,166,78,0.3);
-  border-color: #7bcf76;
-}
-.pg-op-clickable:hover { background: rgba(78,166,78,0.55); }
-.pg-op-tag:disabled { cursor: default; }
+.pg-optag-click { cursor: pointer; background: rgba(78,166,78,0.3); border-color: #7bcf76; }
+.pg-optag-click:hover { background: rgba(78,166,78,0.55); }
+.pg-optag:disabled { cursor: default; }
 
-/* ── Live readout ── */
-.pg-readout {
+/* ── Equation strip (live expression) ── */
+.pg-equation-strip {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 4px;
-  font-size: clamp(15px, 2.5vw, 20px);
-  background: rgba(0,0,0,0.35);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
-  padding: 7px 20px;
-  min-height: 40px;
-  transition: border-color 0.3s;
+  gap: 3px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 5px 18px;
+  font-size: clamp(14px, 2.2vw, 19px);
+  min-height: 38px;
+  transition: border-color 0.3s, background 0.3s;
+  width: 100%;
+  box-sizing: border-box;
 }
-.pg-readout-dim  { color: rgba(216,255,216,0.4); }
-.pg-readout-ok   { border-color: rgba(34,197,94,0.6);  color: #86efac; }
-.pg-readout-miss { border-color: rgba(239,68,68,0.4);  color: rgba(216,255,216,0.7); }
+.pg-eq-match { border-color: rgba(34,197,94,0.5); background: rgba(34,197,94,0.07); }
+.pg-eq-miss  { border-color: rgba(239,68,68,0.3);  }
 
-.pg-ro-op     { color: rgba(216,255,216,0.55); margin: 0 2px; }
-.pg-ro-val    { font-weight: bold; color: #f3fff3; }
-.pg-ro-empty  { color: rgba(216,255,216,0.25); }
-.pg-ro-eq     { color: rgba(216,255,216,0.5); }
-.pg-ro-result { color: #ffe082; }
-.pg-ro-check  { color: #22c55e; font-size: 1.1em; }
+.pg-eq-start  { color: #f3fff3; font-weight: bold; }
+.pg-eq-op     { color: rgba(210,255,210,0.5); margin: 0 1px; }
+.pg-eq-val    { font-weight: bold; }
+.pg-eq-placed { color: #f3fff3; }
+.pg-eq-blank  { color: rgba(210,255,210,0.25); }
+.pg-eq-eq     { color: rgba(210,255,210,0.45); margin: 0 2px; }
+.pg-eq-result { color: #ffe082; }
+.pg-eq-ok     { color: #22c55e; }
 
 /* ============================================================
    WRONG BANNER
    ============================================================ */
 .pg-wrong-banner {
   position: relative;
-  z-index: 10;
+  z-index: 20;
   text-align: center;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   color: #fca5a5;
-  background: rgba(127,29,29,0.7);
-  border: 1px solid rgba(239,68,68,0.5);
+  background: rgba(127,29,29,0.72);
+  border: 1px solid rgba(239,68,68,0.45);
   border-radius: 10px;
-  padding: 8px 24px;
-  margin: 6px 20px;
-  animation: fadeInDown 0.2s ease;
+  padding: 7px 22px;
+  margin: 4px 20px;
   flex-shrink: 0;
+  animation: fadeSlideIn 0.2s ease;
 }
 
 /* ============================================================
@@ -435,9 +485,9 @@
    ============================================================ */
 .pg-actions {
   position: relative;
-  z-index: 10;
+  z-index: 20;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
   padding: 8px 16px;
@@ -445,38 +495,39 @@
 }
 
 .pg-btn {
-  padding: 10px 24px;
-  font-size: 17px;
+  padding: 10px 22px;
+  font-size: 16px;
   font-weight: bold;
   font-family: 'Indie Flower', cursive;
   color: #f3fff3;
   border-radius: 14px;
   cursor: pointer;
   border: 2px solid;
-  min-width: 110px;
+  min-width: 106px;
   transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
-.pg-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.45); }
+.pg-btn:hover:not(:disabled)  { transform: translateY(-2px); box-shadow: 0 7px 16px rgba(0,0,0,0.45); }
 .pg-btn:active:not(:disabled) { transform: translateY(0); }
-.pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pg-btn:disabled               { opacity: 0.38; cursor: not-allowed; }
 
-.pg-btn-reset  { background: linear-gradient(180deg, #78909c, #455a64); border-color: #90a4ae; }
+.pg-btn-reset { background: linear-gradient(180deg, #78909c, #455a64); border-color: #90a4ae; }
 .pg-btn-reset:hover:not(:disabled) { background: linear-gradient(180deg, #90a4ae, #546e7a); }
 
-.pg-btn-hint   { background: linear-gradient(180deg, #26a69a, #00796b); border-color: #80cbc4; }
+.pg-btn-hint  { background: linear-gradient(180deg, #26a69a, #00796b); border-color: #80cbc4; }
 .pg-btn-hint:hover:not(:disabled) { background: linear-gradient(180deg, #4db6ac, #00897b); }
 
-.pg-btn-valve  { background: linear-gradient(180deg, #5a7a5a, #2f5f2f); border-color: #7aaa6a; }
+.pg-btn-valve { background: linear-gradient(180deg, #5a7a5a, #2f5f2f); border-color: #7aaa6a; }
 .pg-btn-valve:hover:not(:disabled) { background: linear-gradient(180deg, #6a8a6a, #3a6a3a); }
+
 .pg-btn-valve-ready {
   background: linear-gradient(180deg, #4ea64e, #2f7d32) !important;
   border-color: #7bcf76 !important;
-  animation: readyGlow 0.9s ease infinite alternate;
+  animation: readyGlow 0.85s ease infinite alternate;
 }
 @keyframes readyGlow {
-  from { box-shadow: 0 4px 10px rgba(78,166,78,0.4); }
-  to   { box-shadow: 0 6px 22px rgba(78,166,78,0.8); }
+  from { box-shadow: 0 4px 10px rgba(78,166,78,0.35); }
+  to   { box-shadow: 0 5px 22px rgba(78,166,78,0.8); }
 }
 
 .pg-btn-next { background: linear-gradient(180deg, #ffa726, #e65100); border-color: #ffcc80; }
@@ -487,33 +538,34 @@
    ============================================================ */
 .pg-tray-zone {
   position: relative;
-  z-index: 10;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px 16px;
-  background: rgba(0,0,0,0.4);
-  border-top: 2px solid rgba(78,166,78,0.15);
+  padding: 10px 16px 18px;
+  background: rgba(0,0,0,0.45);
+  border-top: 2px solid rgba(90,160,90,0.15);
   flex-shrink: 0;
 }
 
-.pg-tray-label {
-  font-size: 14px;
-  color: rgba(216,255,216,0.5);
-  margin: 0;
-  letter-spacing: 1px;
+.pg-tray-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
+.pg-tray-title { font-size: 14px; color: rgba(210,255,210,0.55); letter-spacing: 1px; }
+.pg-tray-sub   { font-size: 12px; color: rgba(210,255,210,0.35); }
 
 .pg-tray {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 /* ── Tray pipe piece ── */
-.pg-tray-pipe {
+.pg-tpipe {
   display: inline-flex;
   align-items: center;
   gap: 0;
@@ -523,104 +575,144 @@
   cursor: pointer;
   transition: transform 0.18s, filter 0.18s;
 }
-.pg-tray-pipe:hover:not(:disabled) { transform: translateY(-5px) scale(1.06); }
-.pg-tray-pipe:active:not(:disabled) { transform: translateY(-2px) scale(1.02); }
+.pg-tpipe:hover:not(:disabled)  { transform: translateY(-6px) scale(1.07); }
+.pg-tpipe:active:not(:disabled) { transform: translateY(-2px) scale(1.02); }
 
-.pg-tray-cap {
+/* End caps */
+.pg-tcap {
   display: block;
-  width: 10px;
-  height: 46px;
-  background: linear-gradient(180deg, #2a3e2a, #111e11);
-  border: 2px solid #243424;
-  border-radius: 4px;
-  box-shadow: inset 1px 0 3px rgba(0,0,0,0.5);
+  width: 9px;
+  height: 44px;
+  background: linear-gradient(180deg, #283a28, #101c10);
+  border: 2px solid #1e2e1e;
+  box-shadow: inset 1px 0 3px rgba(0,0,0,0.6);
 }
-.pg-tray-cap:last-child { border-radius: 0 4px 4px 0; }
-.pg-tray-cap:first-child { border-radius: 4px 0 0 4px; }
+.pg-tpipe .pg-tcap:first-child { border-radius: 5px 0 0 5px; }
+.pg-tpipe .pg-tcap:last-child  { border-radius: 0 5px 5px 0; }
 
-.pg-tray-body {
+/* Pipe body */
+.pg-tbody {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 52px;
-  height: 46px;
+  min-width: 50px;
+  height: 44px;
   background: linear-gradient(180deg,
-    #5cb85c 0%, #3d8b3d 40%, #2f7d32 60%, #4a9a4a 100%
+    #5cb85c 0%, #3d8b3d 38%, #2f7d32 58%, #4a9a4a 100%
   );
   border-top:    3px solid #7bcf76;
   border-bottom: 3px solid #1a5a1a;
   color: #f3fff3;
-  font-size: 22px;
+  font-size: 21px;
   font-weight: bold;
   font-family: 'Indie Flower', cursive;
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
   box-shadow:
-    inset 0 2px 6px rgba(255,255,255,0.12),
+    inset 0 3px 6px rgba(255,255,255,0.13),
     inset 0 -2px 4px rgba(0,0,0,0.25);
-  padding: 0 12px;
+  padding: 0 11px;
   user-select: none;
 }
 
-/* States */
-.pg-tray-selected .pg-tray-body {
+/* Selected (golden) */
+.pg-tpipe-selected .pg-tbody {
   background: linear-gradient(180deg, #ffe082, #f9a825, #e65100);
   border-top-color:    #fff176;
   border-bottom-color: #bf360c;
   color: #1a0a00;
   box-shadow:
     inset 0 2px 6px rgba(255,255,255,0.2),
-    0 0 18px rgba(255,224,130,0.7);
+    0 0 20px rgba(255,224,130,0.75);
 }
-.pg-tray-selected .pg-tray-cap {
+.pg-tpipe-selected .pg-tcap {
   background: linear-gradient(180deg, #5a3a00, #2a1a00);
   border-color: #4a2a00;
 }
 
-.pg-tray-used {
-  opacity: 0.28;
-  filter: saturate(0.2);
-  cursor: not-allowed;
-}
+/* Used (faded) */
+.pg-tpipe-used { opacity: 0.25; filter: saturate(0.15); cursor: not-allowed; }
 
-.pg-tray-hint .pg-tray-body {
+/* Hint (teal bounce) */
+.pg-tpipe-hint .pg-tbody {
   background: linear-gradient(180deg, #80cbc4, #00897b, #004d40);
   border-top-color:    #b2dfdb;
   border-bottom-color: #002e27;
-  box-shadow:
-    inset 0 2px 6px rgba(255,255,255,0.15),
-    0 0 18px rgba(128,203,196,0.7);
+  box-shadow: inset 0 2px 6px rgba(255,255,255,0.15), 0 0 18px rgba(128,203,196,0.7);
   animation: hintBounce 0.5s ease infinite alternate;
 }
 @keyframes hintBounce {
   from { transform: translateY(0); }
-  to   { transform: translateY(-5px); }
+  to   { transform: translateY(-6px); }
+}
+
+/* ============================================================
+   VALVE
+   ============================================================ */
+.pg-valve {
+  cursor: pointer;
+  transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), filter 0.3s;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.55));
+  display: block;
+}
+.pg-valve:hover { filter: drop-shadow(0 4px 10px rgba(90,200,90,0.45)) brightness(1.1); }
+
+.pg-valve-ready  { animation: valvePulse 1s ease infinite alternate; }
+.pg-valve-open   { transform: rotate(90deg); filter: drop-shadow(0 0 16px rgba(56,189,248,0.85)); }
+.pg-valve-failed { animation: valveShake 0.45s ease; filter: drop-shadow(0 0 8px rgba(239,68,68,0.8)); }
+
+@keyframes valvePulse {
+  from { filter: drop-shadow(0 0 6px rgba(34,197,94,0.5)); }
+  to   { filter: drop-shadow(0 0 18px rgba(34,197,94,0.95)); }
+}
+@keyframes valveShake {
+  0%,100% { transform: rotate(0deg); }
+  20%     { transform: rotate(-14deg); }
+  40%     { transform: rotate(14deg); }
+  60%     { transform: rotate(-9deg); }
+  80%     { transform: rotate(9deg); }
 }
 
 /* ============================================================
    WATER FLOW ANIMATION
-   Applied to: .pg-h-pipe, .pg-v-connector, .pg-path-slot,
-               .pg-path-join when .pg-flowing is added.
-   Uses hue-rotate(+130deg) to shift green → blue.
-   animation-delay is set inline per element.
+   hue-rotate(130deg) turns the green pipe palette into blue water.
+   Each element gets animation-delay via inline style.
    ============================================================ */
 .pg-flowing {
-  animation: waterFill 0.55s ease-out forwards !important;
+  animation: waterFill 0.6s ease-out forwards !important;
   animation-fill-mode: both !important;
 }
 
 @keyframes waterFill {
-  0% {
-    filter: brightness(1);
-  }
-  40% {
-    filter: hue-rotate(130deg) saturate(2.2) brightness(1.3);
-  }
+  0%  { filter: brightness(1); }
+  35% { filter: hue-rotate(120deg) saturate(2.4) brightness(1.35); }
   100% {
-    filter: hue-rotate(130deg) saturate(2.5) brightness(1.4);
+    filter: hue-rotate(130deg) saturate(2.8) brightness(1.45);
     box-shadow:
-      0 0 22px rgba(56,189,248,0.65),
-      inset 0 0 8px rgba(125,211,252,0.3);
+      0 0 24px rgba(56,189,248,0.65),
+      inset 0 0 10px rgba(125,211,252,0.3);
   }
+}
+
+/* Water shimmer on the barrel (runs after waterFill) */
+.pg-mpipe.pg-flowing .pg-mpipe-barrel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(125,211,252,0.25) 40%,
+    rgba(255,255,255,0.2) 50%, rgba(125,211,252,0.15) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: waterShimmer 0.8s ease-in-out 0.5s infinite;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+@keyframes waterShimmer {
+  0%   { background-position: -200% center; opacity: 0; }
+  30%  { opacity: 1; }
+  100% { background-position: 200% center; opacity: 0; }
 }
 
 /* ============================================================
@@ -629,19 +721,19 @@
 .pg-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.78);
+  background: rgba(0,0,0,0.8);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
-  animation: fadeIn 0.3s ease;
+  z-index: 300;
+  animation: fadeIn 0.25s ease;
 }
 
 .pg-success-card {
-  background: linear-gradient(160deg, #0a2a1a, #0d1f0d);
+  background: linear-gradient(160deg, #0a2a14, #0c1e0c);
   border: 3px solid #7bcf76;
   border-radius: 26px;
-  padding: 40px 52px;
+  padding: 38px 50px;
   max-width: 460px;
   width: 90%;
   display: flex;
@@ -654,18 +746,18 @@
   animation: popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
 }
 
-.pg-success-icon  { font-size: 64px; animation: dropIn 0.6s ease; }
-.pg-success-title { font-size: 42px; color: #d8ffd8; margin: 0; letter-spacing: 4px; }
-.pg-success-expr  { font-size: 19px; color: #ffe082; text-align: center; margin: 0; }
-.pg-success-bonus { font-size: 15px; color: #80cbc4; margin: 0; }
-.pg-success-btns  { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+.pg-success-icon  { font-size: 62px; animation: dropIn 0.55s ease; }
+.pg-success-title { font-size: 40px; color: #d4f5d4; margin: 0; letter-spacing: 4px; }
+.pg-success-expr  { font-size: 18px; color: #ffe082; text-align: center; margin: 0; }
+.pg-success-bonus { font-size: 14px; color: #80cbc4; margin: 0; }
+.pg-success-btns  { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
 
 /* ============================================================
    KEYFRAMES
    ============================================================ */
-@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes popIn {
@@ -681,19 +773,26 @@
 /* ============================================================
    RESPONSIVE
    ============================================================ */
-@media (max-width: 600px) {
-  .pg-h-pipe     { height: 58px; padding: 0 10px; border-radius: 9px; }
-  .pg-badge-num  { font-size: 22px; }
-  .pg-path-slot  { min-width: 68px; height: 50px; }
-  .pg-slot-val   { font-size: 19px; }
-  .pg-tray-body  { min-width: 42px; height: 40px; font-size: 19px; }
-  .pg-tray-cap   { height: 40px; width: 8px; }
-  .pg-btn        { padding: 8px 16px; font-size: 15px; min-width: 90px; }
-  .pg-success-card { padding: 28px 24px; }
-  .pg-success-title { font-size: 32px; }
-  .pg-v-connector { height: 24px; }
+@media (max-width: 640px) {
+  .pg-content         { padding: 10px 12px 0; }
+  .pg-mpipe-barrel    { height: 50px; }
+  .pg-mmarker-val     { font-size: 21px; }
+  .pg-mmarker-badge   { padding: 2px 10px; }
+  .pg-mmarker-label   { font-size: 8px; }
+  .pg-mpipe-top       { padding-top: 32px; }
+  .pg-mpipe-bottom    { padding-bottom: 32px; }
+  .pg-pslot           { min-width: 68px; height: 52px; }
+  .pg-pslot-val       { font-size: 20px; }
+  .pg-tbody           { min-width: 40px; height: 38px; font-size: 18px; }
+  .pg-tcap            { height: 38px; width: 7px; }
+  .pg-btn             { padding: 8px 14px; font-size: 15px; min-width: 90px; }
+  .pg-success-card    { padding: 26px 22px; }
+  .pg-success-title   { font-size: 30px; }
+  .pg-vconn           { height: 22px; }
 }
-@media (max-width: 420px) {
-  .pg-path-slot  { min-width: 56px; }
-  .pg-tray-body  { min-width: 36px; padding: 0 8px; font-size: 17px; }
+
+@media (max-width: 400px) {
+  .pg-pslot  { min-width: 54px; }
+  .pg-tbody  { min-width: 34px; padding: 0 7px; font-size: 16px; }
+  .pg-scale-num { font-size: 9px; }
 }
