@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from 'rea
 import { getPuzzle }            from './puzzleGenerator'
 import { evaluate, isComplete } from './evaluator'
 import './PipesGame.css'
+import './PipePuzzleDesign.css'
 
 const GAME_LENGTH = 8   // questions per session
 const RULER_MAX   = 20  // fixed 1–20 ruler on both pipes
@@ -384,186 +385,239 @@ function PipesGame({ mode, onBack }) {
     transPhase === 'enter' ? 'pg-trans-enter' : '',
   ].filter(Boolean).join(' ')
 
+  const valveWidgetCls = [
+    'valve-widget',
+    valveState === 'ready'  ? 'valve-widget--ready'  : '',
+    valveState === 'open'   ? 'valve-widget--open'    : '',
+    valveState === 'failed' ? 'valve-widget--failed'  : '',
+  ].filter(Boolean).join(' ')
+
+  const panelCls = [
+    'puzzle-panel',
+    transPhase === 'exit'  ? 'puzzle-panel--exit'  : '',
+    transPhase === 'enter' ? 'puzzle-panel--enter' : '',
+  ].filter(Boolean).join(' ')
+
+  const valveStatusText =
+    valveState === 'ready'  ? 'READY'  :
+    valveState === 'open'   ? 'OPEN'   :
+    valveState === 'failed' ? 'WRONG'  : 'LOCKED'
+
   return (
-    <div className="pg-scene">
+    <div className="game-root-page">
+      <div className="game-root">
 
-      {/* ── Fixed header ── */}
-      <header className="pg-header">
-        <button className="pg-back-btn" onClick={onBack}>&#8592; Menu</button>
+        {/* ── Race Bar (top strip) ── */}
+        <div className="race-bar">
+          <button className="race-back-btn" onClick={onBack}>&#8592; MENU</button>
+          <span className="race-label">{modePill}</span>
 
-        <div className="pg-header-mid">
-          <span className="pg-mode-pill">{modePill}</span>
-          {/* Progress dots */}
-          <div className="pg-prog-dots" aria-label={`Question ${questionNum} of ${GAME_LENGTH}`}>
+          <div className="race-dots" aria-label={`Question ${questionNum} of ${GAME_LENGTH}`}>
             {Array.from({ length: GAME_LENGTH }, (_, i) => (
               <div
                 key={i}
-                className={`pg-dot ${
-                  i < questionNum - 1 ? 'pg-dot-done' :
-                  i === questionNum - 1 ? 'pg-dot-active' : ''
+                className={`race-dot${
+                  i < questionNum - 1 ? ' race-dot--done' :
+                  i === questionNum - 1 ? ' race-dot--active' : ''
                 }`}
               />
             ))}
           </div>
-        </div>
 
-        <div className="pg-header-right">
-          <span className="pg-qnum">Q {questionNum}/{GAME_LENGTH}</span>
-          <span className="pg-score">⭐ {score}</span>
-        </div>
-      </header>
-
-      {/* ── Transitioning pipes area ── */}
-      <div className={boardCls}>
-
-        {/* TOP MEASUREMENT PIPE + VALVE */}
-        <div className="pg-top-row">
-          <div className="pg-pipe-col">
-            <MeasurePipe
-              markedVal={puzzle.start}
-              markerLabel="START"
-              isStart={true}
-              isFlowing={flowing}
-              flowDelay={f(0)}
-            />
-          </div>
-          <div className="pg-valve-col">
-            <Valve state={valveState} onClick={handleValve} />
-            <span className="pg-valve-lbl">
-              {valveState === 'ready'  && '▶ Open!'}
-              {valveState === 'locked' && 'Locked'}
-              {valveState === 'open'   && 'Open'}
-              {valveState === 'failed' && '✕ Wrong'}
-            </span>
-          </div>
-        </div>
-
-        {/* Connector down from top pipe */}
-        <VConn flowing={flowing} delay={f(1)} />
-
-        {/* ── PATH / SLOT AREA ── */}
-        <div className="pg-path-zone">
-
-          {/* Tip text */}
-          <p className="pg-tip">
-            {isActive && selIdx !== null
-              ? `Pipe ${puzzle.pipes[selIdx]} ready — tap a slot`
-              : isActive
-                ? 'Tap a pipe below, then tap a slot'
-                : null}
-          </p>
-
-          {/* Slot row */}
-          <div className="pg-path-row">
-            {slots.map((slot, i) => (
-              <Fragment key={i}>
-                {i > 0 && (
-                  <div
-                    className={`pg-pjoin${flowing ? ' pg-flowing' : ''}`}
-                    style={{ animationDelay: f(1.5 + i * 0.28) }}
-                  />
-                )}
-                <PathSlot
-                  slot={slot}
-                  operator={operators[i]}
-                  mode={mode}
-                  isReady={isActive && selIdx !== null && !slot}
-                  isFlowing={flowing}
-                  isHinted={slot?.pipeIdx === hintPipeIdx}
-                  flowDelay={f(1.5 + i * 0.28)}
-                  onSlotClick={() => handleSlotClick(i)}
-                  onOpToggle={() => handleOpToggle(i)}
-                />
-              </Fragment>
-            ))}
-          </div>
-
-          {/* Live equation — styled as a gauge panel in the pipe scene */}
-          <div className={`pg-eqstrip${!allFilled ? '' : isMatch ? ' pg-eq-ok' : ' pg-eq-miss'}`}>
-            <span className="pg-eq-s">{puzzle.start}</span>
-            {slots.map((s, i) => (
-              <Fragment key={i}>
-                <span className="pg-eq-op">{operators[i]}</span>
-                <span className={`pg-eq-v ${s ? 'pg-eq-placed' : 'pg-eq-blank'}`}>
-                  {s ? s.value : '?'}
-                </span>
-              </Fragment>
-            ))}
-            <span className="pg-eq-eq"> = </span>
-            <strong className="pg-eq-r">{allFilled ? liveResult : '?'}</strong>
-            {isMatch && <span className="pg-eq-ok-chk"> ✓</span>}
-          </div>
-
-          {/* Correct flash banner (shows briefly before transition) */}
-          {isCorrect && (
-            <div className="pg-correct-flash">
-              ✓ Correct! +{hintsUsed === 0 ? 15 : 10} pts
+          <div className="race-player race-player--you">
+            <span className="race-player__name">PROGRESS</span>
+            <div className="race-player__track">
+              <div
+                className="race-player__fill"
+                style={{ width: `${((questionNum - 1) / GAME_LENGTH) * 100}%` }}
+              />
             </div>
-          )}
+            <div className="race-player__icon">&#9679;</div>
+          </div>
+
+          <span className="race-counter">Q{questionNum}/{GAME_LENGTH} &middot; {score}pts</span>
         </div>
 
-        {/* Connector up to bottom pipe */}
-        <VConn
-          flowing={flowing}
-          delay={f(1.5 + nSlots * 0.28 + 0.3)}
-        />
+        {/* ── Main Body (valve + puzzle) ── */}
+        <div className="game-body">
 
-        {/* BOTTOM MEASUREMENT PIPE */}
-        <MeasurePipe
-          markedVal={puzzle.target}
-          markerLabel="TARGET"
-          isStart={false}
-          isFlowing={flowing}
-          flowDelay={f(1.5 + nSlots * 0.28 + 0.6)}
-        />
+          {/* Valve Sidebar */}
+          <div className="valve-sidebar">
+            <span className="valve-label">VALVE</span>
+            <div className={valveWidgetCls} onClick={handleValve} role="button" aria-label="Open valve" />
+            <div className="valve-pipe" />
+            <span className="valve-status">{valveStatusText}</span>
+          </div>
 
-      </div>{/* end pg-pipes-area */}
+          {/* Puzzle Panel */}
+          <div className={panelCls}>
 
-      {/* Wrong-answer banner (outside transition so it shows stably) */}
-      {wrongMsg && <div className="pg-wrong-banner">{wrongMsg}</div>}
+            {/* Top Ruler — marks 1–20, START value highlighted */}
+            <div className="ruler">
+              {Array.from({ length: RULER_MAX }, (_, i) => {
+                const v = i + 1
+                return (
+                  <span
+                    key={v}
+                    className={`ruler__cell${v === puzzle.start ? ' ruler__cell--active' : ''}${flowing && v <= puzzle.start ? ' ruler__cell--flowing' : ''}`}
+                  >
+                    {v}
+                  </span>
+                )
+              })}
+            </div>
 
-      {/* ── Action buttons ── */}
-      <div className="pg-actions">
-        <button
-          className="pg-btn pg-btn-reset"
-          onClick={handleReset}
-          disabled={gameState !== 'playing' || transPhase !== null}
-        >⟲ Reset</button>
-        <button
-          className="pg-btn pg-btn-hint"
-          onClick={handleHint}
-          disabled={!isActive}
-        >💡 Hint</button>
-        <button
-          className={`pg-btn pg-btn-valve${valveState === 'ready' ? ' pg-btn-valve-ready' : ''}`}
-          onClick={handleValve}
-          disabled={!allFilled || !isActive}
-        >🔧 Open Valve</button>
-      </div>
+            {/* Slot Grid */}
+            <div className="slot-grid">
 
-      {/* ── Pipe tray ── */}
-      <div className="pg-tray-zone">
-        <div className="pg-tray-hdr">
-          <span className="pg-tray-title">Pipe Pieces</span>
-          <span className="pg-tray-count">{puzzle.pipes.length - usedIdx.length} left</span>
+              {/* Tip text */}
+              {isActive && (
+                <p className="slot-grid__tip">
+                  {selIdx !== null
+                    ? `Pipe ${puzzle.pipes[selIdx]} selected — click a slot to place`
+                    : 'Select a pipe below, then click a slot'}
+                </p>
+              )}
+
+              {/* Slot row */}
+              <div className="slot-row slot-row--center">
+                {slots.map((slot, i) => {
+                  const slotCls = [
+                    'slot',
+                    slot                                     ? 'slot--filled'  : '',
+                    !slot && isActive && selIdx !== null      ? 'slot--ready'   : '',
+                    flowing && slot                          ? 'slot--flowing'  : '',
+                    slot?.pipeIdx === hintPipeIdx             ? 'slot--hinted'  : '',
+                  ].filter(Boolean).join(' ')
+
+                  return (
+                    <div key={i} className={slotCls} onClick={() => handleSlotClick(i)}>
+                      {slot ? (
+                        <>
+                          <button
+                            className={`slot__op${mode === 'mixed' ? ' slot__op--clickable' : ''}`}
+                            onClick={(e) => { e.stopPropagation(); handleOpToggle(i) }}
+                            disabled={mode !== 'mixed'}
+                          >
+                            {operators[i]}
+                          </button>
+                          <span className="slot__val">{slot.value}</span>
+                        </>
+                      ) : (
+                        <span className="slot__ph">?</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Live equation strip */}
+              <div className={`eq-strip${!allFilled ? '' : isMatch ? ' eq-strip--match' : ''}`}>
+                <span className="eq-strip__num">{puzzle.start}</span>
+                {slots.map((s, i) => (
+                  <Fragment key={i}>
+                    <span className="eq-strip__op">{operators[i]}</span>
+                    <span className={`eq-strip__val ${s ? 'eq-strip__val--placed' : 'eq-strip__val--blank'}`}>
+                      {s ? s.value : '?'}
+                    </span>
+                  </Fragment>
+                ))}
+                <span className="eq-strip__eq">=</span>
+                <strong className="eq-strip__result">{allFilled ? liveResult : '?'}</strong>
+                {isMatch && <span className="eq-strip__check"> &#10003;</span>}
+              </div>
+
+            </div>{/* end slot-grid */}
+
+            {/* Bottom Ruler — marks 1–20, TARGET value highlighted */}
+            <div className="ruler ruler--bottom">
+              {Array.from({ length: RULER_MAX }, (_, i) => {
+                const v = i + 1
+                return (
+                  <span
+                    key={v}
+                    className={`ruler__cell${v === puzzle.target ? ' ruler__cell--active' : ''}${flowing && v <= puzzle.target ? ' ruler__cell--flowing' : ''}`}
+                  >
+                    {v}
+                  </span>
+                )
+              })}
+            </div>
+
+          </div>{/* end puzzle-panel */}
+        </div>{/* end game-body */}
+
+        {/* ── Goal Footer ── */}
+        <div className="goal-footer">
+          <div className="goal-footer__icon" />
+          <div className="goal-footer__text">
+            <strong>START: {puzzle.start} &rarr; TARGET: {puzzle.target}</strong>
+            {' '}&#8212; Fill all slots so the equation reaches the target.
+            {' '}({puzzle.pipes.length - usedIdx.length} pipes remaining)
+          </div>
         </div>
-        <div className="pg-tray">
-          {puzzle.pipes.map((val, i) => (
-            <TrayPipe
-              key={i}
-              value={val}
-              state={trayState(i)}
-              onClick={() => handleTrayClick(i)}
-            />
-          ))}
+
+        {/* ── Pipes Bar (bottom toolbar) ── */}
+        <div className="pipes-bar">
+          <div className="pipes-bar__header">
+            <span className="pipes-bar__label">PIPE PIECES &mdash; {puzzle.pipes.length - usedIdx.length} left</span>
+            <div className="pipes-bar__actions">
+              <button
+                className="pipe-chip pipe-chip--action"
+                onClick={handleReset}
+                disabled={gameState !== 'playing' || transPhase !== null}
+              >&#8635; RESET</button>
+              <button
+                className="pipe-chip pipe-chip--action"
+                onClick={handleHint}
+                disabled={!isActive}
+              >? HINT</button>
+              <button
+                className={`pipe-chip${valveState === 'ready' ? ' pipe-chip--selected' : ' pipe-chip--action'}`}
+                onClick={handleValve}
+                disabled={!allFilled || !isActive}
+              >&#9881; VALVE</button>
+            </div>
+          </div>
+          <div className="pipes-list">
+            {puzzle.pipes.map((val, i) => {
+              const st = trayState(i)
+              const chipCls = [
+                'pipe-chip',
+                st === 'selected' ? 'pipe-chip--selected' : '',
+                st === 'used'     ? 'pipe-chip--used'     : '',
+                st === 'hint'     ? 'pipe-chip--hinted'   : '',
+              ].filter(Boolean).join(' ')
+
+              return (
+                <button
+                  key={i}
+                  className={chipCls}
+                  onClick={() => handleTrayClick(i)}
+                  disabled={st === 'used'}
+                  aria-label={`Pipe ${val}`}
+                >
+                  {val}
+                </button>
+              )
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* ── Session complete ── */}
-      {sessionDone && (
-        <EndScreen score={score} hintsTotal={hintsTotal} onHome={onBack} />
-      )}
+        {/* ── Overlays ── */}
+        {wrongMsg && <div className="wrong-banner">{wrongMsg}</div>}
 
+        {isCorrect && (
+          <div className="correct-flash">
+            &#10003; Correct! +{hintsUsed === 0 ? 15 : 10} pts
+          </div>
+        )}
+
+        {sessionDone && (
+          <EndScreen score={score} hintsTotal={hintsTotal} onHome={onBack} />
+        )}
+
+      </div>{/* end game-root */}
     </div>
   )
 }
