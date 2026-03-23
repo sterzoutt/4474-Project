@@ -229,6 +229,10 @@ function PipesGame({ mode, onBack }) {
   const [hintsUsed,   setHintsUsed]  = useState(0)
   const [wrongMsg,    setWrongMsg]   = useState('')
 
+  // Drag-and-drop presentational state (no logic changes to existing handlers)
+  const [dragIdx,      setDragIdx]      = useState(null)
+  const [dragOverSlot, setDragOverSlot] = useState(null)
+
   // Reset everything when the puzzle (question) changes
   useEffect(() => {
     setSlots(Array(puzzle.slotCount).fill(null))
@@ -370,8 +374,42 @@ function PipesGame({ mode, onBack }) {
     if (usedIdx.includes(i)) return 'used'
     if (i === hintPipeIdx)   return 'hint'
     if (i === selIdx)        return 'selected'
+    if (i === dragIdx)       return 'selected'
     return ''
   }
+
+  // ── Drag-and-drop handlers (additive — click handlers still work) ─────────
+  const handleDragStart = useCallback((i) => {
+    if (!isActive) return
+    setDragIdx(i)
+    setSelIdx(i)
+  }, [isActive])
+
+  const handleDragEnd = useCallback(() => {
+    setDragIdx(null)
+    setDragOverSlot(null)
+  }, [])
+
+  const handleSlotDragOver = useCallback((e, i) => {
+    e.preventDefault()
+    if (!isActive || slots[i] !== null) return
+    setDragOverSlot(i)
+  }, [isActive, slots])
+
+  const handleSlotDragLeave = useCallback(() => {
+    setDragOverSlot(null)
+  }, [])
+
+  const handleSlotDrop = useCallback((e, i) => {
+    e.preventDefault()
+    setDragOverSlot(null)
+    if (dragIdx === null || !isActive || slots[i] !== null) return
+    const next = [...slots]
+    next[i] = { pipeIdx: dragIdx, value: puzzle.pipes[dragIdx] }
+    setSlots(next)
+    setSelIdx(null)
+    setDragIdx(null)
+  }, [dragIdx, isActive, slots, puzzle.pipes])
 
   // Flow animation timing helpers
   const f = (n) => `${0.3 + n * 0.28}s`
@@ -480,18 +518,26 @@ function PipesGame({ mode, onBack }) {
               )}
 
               {/* Slot row */}
-              <div className="slot-row slot-row--center">
+              <div className="slot-row slot-row--vertical slot-row--center">
                 {slots.map((slot, i) => {
                   const slotCls = [
                     'slot',
-                    slot                                     ? 'slot--filled'  : '',
-                    !slot && isActive && selIdx !== null      ? 'slot--ready'   : '',
-                    flowing && slot                          ? 'slot--flowing'  : '',
-                    slot?.pipeIdx === hintPipeIdx             ? 'slot--hinted'  : '',
+                    slot                                          ? 'slot--filled'   : '',
+                    !slot && isActive && selIdx !== null           ? 'slot--ready'    : '',
+                    !slot && dragOverSlot === i                    ? 'slot--dragover' : '',
+                    flowing && slot                               ? 'slot--flowing'  : '',
+                    slot?.pipeIdx === hintPipeIdx                  ? 'slot--hinted'   : '',
                   ].filter(Boolean).join(' ')
 
                   return (
-                    <div key={i} className={slotCls} onClick={() => handleSlotClick(i)}>
+                    <div
+                      key={i}
+                      className={slotCls}
+                      onClick={() => handleSlotClick(i)}
+                      onDragOver={(e) => handleSlotDragOver(e, i)}
+                      onDragLeave={handleSlotDragLeave}
+                      onDrop={(e) => handleSlotDrop(e, i)}
+                    >
                       {slot ? (
                         <>
                           <button
@@ -594,10 +640,13 @@ function PipesGame({ mode, onBack }) {
                   key={i}
                   className={chipCls}
                   onClick={() => handleTrayClick(i)}
+                  draggable={st !== 'used' && isActive}
+                  onDragStart={() => handleDragStart(i)}
+                  onDragEnd={handleDragEnd}
                   disabled={st === 'used'}
                   aria-label={`Pipe ${val}`}
                 >
-                  {val}
+                  <span className="pipe-chip__body">{val}</span>
                 </button>
               )
             })}
