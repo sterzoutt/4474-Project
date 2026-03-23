@@ -442,8 +442,45 @@ function PipesGame({ mode, onBack }) {
     valveState === 'failed' ? 'WRONG'  : 'LOCKED'
 
   return (
-    <div className="game-root-page">
-      <div className="game-root">
+    <div className="game-background">
+
+      {/* Background base */}
+      <div className="bg-main" />
+
+      {/* Brick walls + side panels — purely decorative */}
+      <div className="bg-images">
+        <img className="bg-img bg-img--tl1" src="/straight-pipe.png" alt="" aria-hidden="true" />
+        <img className="bg-img bg-img--tl2" src="/curve-pipe.png"    alt="" aria-hidden="true" />
+        <img className="bg-img bg-img--tr1" src="/straight-pipe.png" alt="" aria-hidden="true" />
+        <img className="bg-img bg-img--tr2" src="/curve-pipe.png"    alt="" aria-hidden="true" />
+      </div>
+
+      {/* Brick wall strips */}
+      <div className="bg-brick-left"  aria-hidden="true" />
+      <div className="bg-brick-right" aria-hidden="true" />
+
+      {/* Black side pipe-tray panels (decorative) */}
+      <div className="bg-panel-left" aria-hidden="true">
+        {[2,2,2,2].map((v,i) => (
+          <div key={i} className="bg-panel-pipe">
+            <span className="bg-panel-pipe__badge">{v}</span>
+          </div>
+        ))}
+      </div>
+      <div className="bg-panel-right" aria-hidden="true">
+        {[2,2,2,2].map((v,i) => (
+          <div key={i} className="bg-panel-pipe">
+            <span className="bg-panel-pipe__badge">{v}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom grey strip with dashed yellow divider */}
+      <div className="bg-bottom-bar" />
+
+      {/* Game UI layer — centered, on top */}
+      <div className="game-content">
+        <div className="game-root">
 
         {/* ── Race Bar (top strip) ── */}
         <div className="race-bar">
@@ -518,7 +555,7 @@ function PipesGame({ mode, onBack }) {
               )}
 
               {/* Slot row */}
-              <div className="slot-row slot-row--vertical slot-row--center">
+              <div className="slot-row slot-row--center">
                 {slots.map((slot, i) => {
                   const slotCls = [
                     'slot',
@@ -666,7 +703,8 @@ function PipesGame({ mode, onBack }) {
           <EndScreen score={score} hintsTotal={hintsTotal} onHome={onBack} />
         )}
 
-      </div>{/* end game-root */}
+      </div>
+      </div>
     </div>
   )
 }
