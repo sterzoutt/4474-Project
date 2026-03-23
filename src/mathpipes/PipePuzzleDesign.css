@@ -457,23 +457,70 @@
 /* ── Ruler ─────────────────────────────────────────────────── */
 .ruler {
   display: flex;
-  align-items: center;
-  padding: 8px 10px;
+  align-items: stretch;
+  padding: 0 10px;
   gap: 0;
   border-bottom: 2px solid rgba(255,255,255,0.15);
-  background: rgba(0,0,0,0.25);
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.28));
   flex-shrink: 0;
-  min-height: 34px;
+  min-height: 66px;
+  position: relative;
+  overflow: visible;
+}
+
+.ruler::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  right: -28px;
+  height: 34px;
+  /* Repeat pipe segments with overlap so they look attached (no seams) */
+  background-image: url('/straight-pipe.png');
+  background-repeat: repeat-x;
+  background-size: 170px 100%;
+  background-position: -18px center;
+  opacity: 0.95;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Top ruler: numbers above pipe */
+.ruler:not(.ruler--bottom)::before {
+  bottom: 4px;
+}
+
+/* Bottom ruler: numbers below pipe (above instructions) */
+.ruler.ruler--bottom::before {
+  top: 4px;
+}
+
+.ruler > * {
+  position: relative;
+  z-index: 1;
 }
 .ruler__cell {
   flex: 1;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  position: relative;
   font-family: var(--font-handw);
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-  padding: 4px 0;
+  font-size: 18px;
+  color: #f3fff3;
+  padding: 0;
   line-height: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   transition: color 0.2s, text-shadow 0.2s;
+}
+
+.ruler:not(.ruler--bottom) .ruler__cell {
+  align-items: flex-start;
+  padding-top: 8px;
+}
+
+.ruler.ruler--bottom .ruler__cell {
+  align-items: flex-end;
+  padding-bottom: 8px;
 }
 .ruler__cell--active {
   color: var(--accent-green);
@@ -754,7 +801,7 @@
 .pipe-chip::before {
   content: '';
   display: block;
-  width: 12px;
+  width: 14px;
   height: 110%;
   background: linear-gradient(90deg, #4a4a4a, #888, #4a4a4a);
   border-radius: 3px 0 0 3px;
@@ -766,7 +813,7 @@
 .pipe-chip::after {
   content: '';
   display: block;
-  width: 12px;
+  width: 14px;
   height: 110%;
   background: linear-gradient(90deg, #4a4a4a, #888, #4a4a4a);
   border-radius: 0 3px 3px 0;
@@ -780,7 +827,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72px;
+  min-width: 92px;
+  width: auto;
   height: 42px;
   background: linear-gradient(180deg,
     var(--pipe-metal-shine) 0%,
@@ -795,7 +843,7 @@
   border-right:  none;
   color: #000;
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   text-shadow: 0 1px 2px rgba(255,255,255,0.6);
   box-shadow:
@@ -803,6 +851,7 @@
     inset 0 -4px 8px rgba(0,0,0,0.3);
   user-select: none;
   position: relative;
+  padding: 0 14px;
 }
 
 /* Number badge */
@@ -971,8 +1020,9 @@ button.pipe-chip--action:nth-of-type(3).pipe-chip--selected {
   .bg-brick-left, .bg-brick-right { width: 110px; }
   .bg-panel-left, .bg-panel-right { width: 86px; }
   .bg-panel-pipe { width: 70px; }
-  .ruler { min-height: 30px; padding: 6px 8px; }
-  .ruler__cell { font-size: 12px; }
+  .ruler { min-height: 56px; padding: 0 8px; }
+  .ruler::before { height: 28px; background-size: 150px 100%; background-position: -14px center; }
+  .ruler__cell { font-size: 15px; }
   .goal-footer { padding: 8px 14px; }
   .goal-footer__icon { width: 14px; height: 20px; }
   .goal-footer__text { font-size: 18px; }
@@ -983,12 +1033,13 @@ button.pipe-chip--action:nth-of-type(3).pipe-chip--selected {
   .bg-brick-left, .bg-brick-right { width: 0; display: none; }
   .bg-panel-left, .bg-panel-right { display: none; }
   .pipes-bar { border-top-width: 10px; }
-  .ruler { min-height: 26px; padding: 4px 6px; }
-  .ruler__cell { font-size: 11px; }
+  .ruler { min-height: 46px; padding: 0 6px; }
+  .ruler::before { height: 22px; background-size: 132px 100%; background-position: -10px center; }
+  .ruler__cell { font-size: 13px; }
   .goal-footer { padding: 6px 10px; gap: 8px; }
   .goal-footer__icon { width: 12px; height: 16px; }
   .goal-footer__text { font-size: 14px; line-height: 1.2; }
   .slot__val { font-size: 22px; }
-  .pipe-chip span.pipe-chip__body { width: 56px; height: 36px; font-size: 18px; }
-  .pipe-chip::before, .pipe-chip::after { width: 9px; }
+  .pipe-chip span.pipe-chip__body { min-width: 72px; height: 36px; font-size: 20px; padding: 0 10px; }
+  .pipe-chip::before, .pipe-chip::after { width: 11px; }
 }
