@@ -202,9 +202,9 @@
   inset: 0;
   z-index: 3;
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
-  padding-top: 0;
+  padding: 0;
 }
 
 /* ============================================================
@@ -214,12 +214,12 @@
   font-family: var(--font-chalk);
   color: var(--chalk-white);
   background: var(--chalk-green);
-  border-left:  4px solid rgba(255, 255, 255, 0.18);
-  border-right: 4px solid rgba(255, 255, 255, 0.18);
-  /* fit between brick walls and above the road */
-  width: min(75vw, 960px);
-  height: calc(100vh - 270px);
-  max-height: calc(100vh - 270px);
+  border-left: none;
+  border-right: none;
+  /* game itself is the full screen */
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
   user-select: none;
@@ -498,7 +498,7 @@
   justify-content: center;
   align-items: center;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
   gap: 10px;
 }
@@ -696,7 +696,7 @@
    AVAILABLE PIPES — Bottom toolbar
    ============================================================ */
 .pipes-bar {
-  border-top: 30px dashed var(--road-line);
+  border-top: 14px dashed var(--road-line);
   padding: 12px 16px 10px;
   background: var(--road-grey);
   flex-shrink: 0;
@@ -966,17 +966,17 @@ button.pipe-chip--action:nth-of-type(3).pipe-chip--selected {
    RESPONSIVE
    ============================================================ */
 @media (max-width: 1100px) {
-  .game-root { width: min(80vw, 900px); }
+  .game-root { width: 100vw; height: 100vh; max-height: 100vh; }
   .bg-brick-left, .bg-brick-right { width: 110px; }
   .bg-panel-left, .bg-panel-right { width: 86px; }
   .bg-panel-pipe { width: 70px; }
 }
 
 @media (max-width: 900px), (max-height: 760px) {
-  .game-root { width: 96vw; }
+  .game-root { width: 100vw; height: 100vh; max-height: 100vh; }
   .bg-brick-left, .bg-brick-right { width: 0; display: none; }
   .bg-panel-left, .bg-panel-right { display: none; }
-  .pipes-bar { border-top-width: 18px; }
+  .pipes-bar { border-top-width: 10px; }
   .slot__val { font-size: 22px; }
   .pipe-chip span.pipe-chip__body { width: 56px; height: 36px; font-size: 18px; }
   .pipe-chip::before, .pipe-chip::after { width: 9px; }
