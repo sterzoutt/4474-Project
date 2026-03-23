@@ -66,13 +66,15 @@
   color: var(--color-text-primary);
   background: var(--color-bg);
   border: var(--border-solid);
-  width: 780px;
-  max-width: 100%;
-  margin: 0 auto;
+  width: min(96vw, 1400px);
+  height: min(96vh, 980px);
+  max-height: 96vh;
+  margin: 0;
   display: flex;
   flex-direction: column;
   user-select: none;
-  min-height: 100vh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ============================================================
@@ -195,6 +197,8 @@
   display: flex;
   flex-direction: row;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ── Valve Sidebar ───────────────────────────────────────── */
@@ -281,6 +285,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ── Ruler ───────────────────────────────────────────────── */
@@ -328,6 +335,9 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .slot-grid__tip {
@@ -493,6 +503,7 @@
   border-top: var(--border-solid);
   padding: var(--gap-sm) var(--gap-md);
   background: var(--color-bg);
+  flex-shrink: 0;
 }
 
 .pipes-bar__header {
@@ -584,6 +595,7 @@
   align-items: flex-start;
   gap: var(--gap-sm);
   background: var(--color-bg);
+  flex-shrink: 0;
 }
 
 .goal-footer__icon {
@@ -678,10 +690,118 @@
 /* ── Centering wrapper (for the page) ────────────────────── */
 .game-root-page {
   width: 100vw;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   background: var(--color-surface);
-  padding: var(--gap-xl) 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 1200px), (max-height: 860px) {
+  .game-root {
+    width: 98vw;
+    height: 98vh;
+    max-height: 98vh;
+  }
+
+  .race-bar {
+    gap: var(--gap-sm);
+    padding: 4px 8px;
+  }
+
+  .race-label,
+  .race-player__name,
+  .race-counter {
+    font-size: var(--text-xs);
+  }
+
+  .ruler {
+    padding: 3px 6px;
+  }
+
+  .slot-grid {
+    padding: var(--gap-sm);
+  }
+
+  .slot-row {
+    gap: var(--gap-sm);
+    margin-bottom: var(--gap-sm);
+  }
+
+  .slot {
+    width: 94px;
+    height: 68px;
+  }
+
+  .slot__val {
+    font-size: 16px;
+  }
+
+  .pipes-bar {
+    padding: 6px 10px;
+  }
+
+  .pipe-chip {
+    min-width: 36px;
+    height: 28px;
+    padding: 0 8px;
+  }
+
+  .goal-footer {
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 900px), (max-height: 760px) {
+  .game-root {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-left: none;
+    border-right: none;
+  }
+
+  .race-dots,
+  .race-player__icon {
+    display: none;
+  }
+
+  .race-counter {
+    margin-left: 0;
+  }
+
+  .valve-sidebar {
+    width: 44px;
+    padding-top: 6px;
+    gap: var(--gap-xs);
+  }
+
+  .valve-widget {
+    width: 30px;
+    height: 30px;
+  }
+
+  .valve-widget::after {
+    width: 12px;
+    height: 12px;
+  }
+
+  .slot {
+    width: 78px;
+    height: 56px;
+  }
+
+  .slot__val {
+    font-size: 14px;
+  }
+
+  .slot__ph {
+    font-size: 14px;
+  }
+
+  .goal-footer__text {
+    line-height: 1.3;
+  }
 }
