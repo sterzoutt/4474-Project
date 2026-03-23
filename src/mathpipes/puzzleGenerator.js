@@ -25,6 +25,9 @@ function shuffleArr(arr, rng) {
 
 // Per-difficulty parameters
 const DIFFICULTY = {
+  // 'mini' guarantees start and target stay within 1-20 (ruler range)
+  mini:   { pipeRange: [1, 6],   solutionCount: 2, totalPipes: 4,
+            addStart: [1, 10],   subTarget: [1, 8], mixStart: [5, 13], maxVal: 20 },
   easy:   { pipeRange: [1, 12],  solutionCount: 2, totalPipes: 4, targetRange: [1, 20] },
   medium: { pipeRange: [2, 18],  solutionCount: 3, totalPipes: 5, targetRange: [1, 30] },
   hard:   { pipeRange: [3, 25],  solutionCount: 4, totalPipes: 6, targetRange: [1, 40] },
@@ -53,18 +56,24 @@ function generatePuzzle(difficulty, mode, seed) {
 
     if (mode === 'addition') {
       operators = solutionPipes.map(() => '+')
-      start  = randInt(rng, 1, 15)
+      const aMin = cfg.addStart ? cfg.addStart[0] : 1
+      const aMax = cfg.addStart ? cfg.addStart[1] : 15
+      start  = randInt(rng, aMin, aMax)
       target = solutionPipes.reduce((acc, v) => acc + v, start)
     } else if (mode === 'subtraction') {
       operators = solutionPipes.map(() => '-')
-      target = randInt(rng, cfg.targetRange[0], Math.min(cfg.targetRange[1], 20))
+      const sMin = cfg.subTarget ? cfg.subTarget[0] : (cfg.targetRange ? cfg.targetRange[0] : 1)
+      const sMax = cfg.subTarget ? cfg.subTarget[1] : Math.min(cfg.targetRange ? cfg.targetRange[1] : 20, 20)
+      target = randInt(rng, sMin, sMax)
       start  = solutionPipes.reduce((acc, v) => acc + v, target)
     } else {
       // mixed — at least one of each sign
       operators = solutionPipes.map((_, i) =>
         i === 0 ? '+' : i === 1 ? '-' : rng() > 0.5 ? '+' : '-'
       )
-      start  = randInt(rng, 5, 25)
+      const mMin = cfg.mixStart ? cfg.mixStart[0] : 5
+      const mMax = cfg.mixStart ? cfg.mixStart[1] : 25
+      start  = randInt(rng, mMin, mMax)
       target = solutionPipes.reduce(
         (acc, v, i) => acc + (operators[i] === '+' ? v : -v),
         start
@@ -73,6 +82,8 @@ function generatePuzzle(difficulty, mode, seed) {
 
     // Reject degenerate puzzles
     if (target <= 0 || target > 60 || target === start) continue
+    // Reject if any value exceeds the difficulty's max allowed value
+    if (cfg.maxVal && (start > cfg.maxVal || target > cfg.maxVal)) continue
 
     // Build unique distractor pipes
     const usedSet = new Set(solutionPipes)
