@@ -165,33 +165,10 @@ body {
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Use metallic straight-pipe look for top and bottom menu buttons */
-.home-screen .menu-btn:first-child,
-.home-screen .menu-btn:last-child {
-  border: none;
-  border-radius: 0;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(0,0,0,0.2)),
-    url('/straight-pipe.png') center / 100% 100% no-repeat;
-  color: #111;
-  font-family: 'Inconsolata', monospace;
-  font-weight: 800;
-  text-shadow: 0 1px 2px rgba(255,255,255,0.6);
-  letter-spacing: 0.08em;
-  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.45);
-}
-
 .home-screen .menu-btn:hover {
   background: linear-gradient(180deg, #63b963 0%, #3c9141 100%);
   transform: translateY(-2px);
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
-}
-
-.home-screen .menu-btn:first-child:hover,
-.home-screen .menu-btn:last-child:hover {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.2)),
-    url('/straight-pipe.png') center / 100% 100% no-repeat;
 }
 
 .home-screen .menu-btn:active {
