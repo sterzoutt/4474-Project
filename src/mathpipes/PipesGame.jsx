@@ -2,6 +2,12 @@ import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from 'rea
 import { getPuzzle }            from './puzzleGenerator'
 import { evaluate, isComplete } from './evaluator'
 import { PIPE_VARIANTS }        from './pipeTypes'
+import {
+  buildInitialMountState,
+  saveSession,
+  packSessionForStorage,
+  clearSession,
+} from './pipesSession'
 import './PipesGame.css'
 import './PipePuzzleDesign.css'
 import './PipeBoard.css'
@@ -283,16 +289,22 @@ function EndScreen({ score, hintsTotal, onHome }) {
 }
 
 // ── Main game ─────────────────────────────────────────────────────────────────
-function PipesGame({ mode, onBack }) {
-  const [questionNum,  setQuestionNum]  = useState(1)
-  const [score,        setScore]        = useState(0)
-  const [hintsTotal,   setHintsTotal]   = useState(0)
-  const [sessionDone,  setSessionDone]  = useState(false)
+function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
+  const mountStateRef = useRef(null)
+  if (mountStateRef.current === null) {
+    mountStateRef.current = buildInitialMountState(mode, initialSession)
+  }
+  const M = mountStateRef.current
+
+  const [questionNum,  setQuestionNum]  = useState(M.questionNum)
+  const [score,        setScore]        = useState(M.score)
+  const [hintsTotal,   setHintsTotal]   = useState(M.hintsTotal)
+  const [sessionDone,  setSessionDone]  = useState(M.sessionDone)
   // transPhase: null | 'exit' | 'enter'
-  const [transPhase,   setTransPhase]   = useState(null)
+  const [transPhase,   setTransPhase]   = useState(M.transPhase)
 
   // Ref so async callbacks always read current questionNum
-  const qRef = useRef(1)
+  const qRef = useRef(M.questionNum)
   qRef.current = questionNum
 
   // All 8 questions use 'mini' difficulty — keeps all values within 1–20
@@ -301,22 +313,28 @@ function PipesGame({ mode, onBack }) {
     [mode, questionNum]
   )
 
-  const [slots,       setSlots]      = useState(() => Array(puzzle.slotCount).fill(null))
-  const [operators,   setOperators]  = useState(() => defaultOps(puzzle.slotCount, mode))
-  const [selIdx,      setSelIdx]     = useState(null)
-  const [gameState,   setGameState]  = useState('playing')
-  const [valveState,  setValveState] = useState('locked')
-  const [hintPipeIdx, setHintPipeIdx] = useState(null)
-  const [hintStep,    setHintStep]   = useState(0)
-  const [hintsUsed,   setHintsUsed]  = useState(0)
-  const [wrongMsg,    setWrongMsg]   = useState('')
+  const [slots,       setSlots]      = useState(() => M.slots.map((s) => (s ? { ...s } : null)))
+  const [operators,   setOperators]  = useState(() => [...M.operators])
+  const [selIdx,      setSelIdx]     = useState(M.selIdx)
+  const [gameState,   setGameState]  = useState(M.gameState)
+  const [valveState,  setValveState] = useState(M.valveState)
+  const [hintPipeIdx, setHintPipeIdx] = useState(M.hintPipeIdx)
+  const [hintStep,    setHintStep]   = useState(M.hintStep)
+  const [hintsUsed,   setHintsUsed]  = useState(M.hintsUsed)
+  const [wrongMsg,    setWrongMsg]   = useState(M.wrongMsg)
 
   // Drag-and-drop presentational state (no logic changes to existing handlers)
   const [dragIdx,      setDragIdx]      = useState(null)
   const [dragOverSlot, setDragOverSlot] = useState(null)
 
+  const skipPuzzleResetOnce = useRef(M.skipFirstPuzzleReset)
+
   // Reset everything when the puzzle (question) changes
   useEffect(() => {
+    if (skipPuzzleResetOnce.current) {
+      skipPuzzleResetOnce.current = false
+      return
+    }
     setSlots(Array(puzzle.slotCount).fill(null))
     setOperators(defaultOps(puzzle.slotCount, mode))
     setSelIdx(null)
@@ -327,6 +345,43 @@ function PipesGame({ mode, onBack }) {
     setHintsUsed(0)
     setWrongMsg('')
   }, [puzzle, mode])
+
+  useEffect(() => {
+    saveSession(
+      packSessionForStorage(mode, {
+        questionNum,
+        score,
+        hintsTotal,
+        sessionDone,
+        transPhase,
+        slots,
+        operators,
+        selIdx,
+        gameState,
+        valveState,
+        hintPipeIdx,
+        hintStep,
+        hintsUsed,
+        wrongMsg,
+      })
+    )
+  }, [
+    mode,
+    questionNum,
+    score,
+    hintsTotal,
+    sessionDone,
+    transPhase,
+    slots,
+    operators,
+    selIdx,
+    gameState,
+    valveState,
+    hintPipeIdx,
+    hintStep,
+    hintsUsed,
+    wrongMsg,
+  ])
 
   // Derived
   const usedIdx    = slots.filter(Boolean).map((s) => s.pipeIdx)
@@ -536,6 +591,7 @@ function PipesGame({ mode, onBack }) {
 
       {/* Game UI layer — centered, on top */}
       <div className="game-content">
+        <div className="pg-corner-mode" title="Current math mode">{modePill}</div>
         <div className="game-root">
 
         {/* ── Race Bar (top strip) ── */}
@@ -567,6 +623,11 @@ function PipesGame({ mode, onBack }) {
           </div>
 
           <span className="race-counter">Q{questionNum}/{GAME_LENGTH} &middot; {score}pts</span>
+          {typeof onAbandon === 'function' && (
+            <button type="button" className="race-abandon-btn" onClick={() => { clearSession(); onAbandon() }}>
+              Leave &amp; lose progress
+            </button>
+          )}
         </div>
 
         {/* ── Main Body (valve + puzzle) ── */}
@@ -811,7 +872,11 @@ function PipesGame({ mode, onBack }) {
         )}
 
         {sessionDone && (
-          <EndScreen score={score} hintsTotal={hintsTotal} onHome={onBack} />
+          <EndScreen
+            score={score}
+            hintsTotal={hintsTotal}
+            onHome={() => { clearSession(); onBack() }}
+          />
         )}
 
       </div>
