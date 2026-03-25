@@ -1,0 +1,315 @@
+/* ═════════════════════════════════════════════════════════════════
+   PipeBoard.css — Pipe board / canvas component
+   Matches the chalkboard + metallic theme from PipePuzzleDesign
+   ═════════════════════════════════════════════════════════════════ */
+
+/* ── Hidden SVG defs container ── */
+.pb-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ── Board container ── */
+.pb-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* ── Row (generic) ── */
+.pb-row {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  transition: background 0.25s, box-shadow 0.25s, border-color 0.25s;
+}
+
+/* Fixed rows (start / end) */
+.pb-row--fixed {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.2);
+}
+
+/* Filled playable row */
+.pb-row--filled {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Empty playable row */
+.pb-row--empty {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(74, 158, 222, 0.18);
+  border-style: dashed;
+}
+
+/* Active row (highlighted for current placement) */
+.pb-row--active {
+  background: rgba(189, 199, 0, 0.1) !important;
+  border-color: #BDC700 !important;
+  border-style: solid !important;
+  box-shadow:
+    0 0 16px rgba(189, 199, 0, 0.25),
+    inset 0 0 12px rgba(189, 199, 0, 0.06);
+  animation: pb-glow 1.4s ease infinite alternate;
+}
+
+@keyframes pb-glow {
+  from { box-shadow: 0 0 8px rgba(189, 199, 0, 0.12); }
+  to   {
+    box-shadow:
+      0 0 22px rgba(189, 199, 0, 0.4),
+      inset 0 0 16px rgba(189, 199, 0, 0.1);
+  }
+}
+
+/* Pulsing indicator arrow in active row */
+.pb-row--active polygon {
+  animation: pb-arrow-pulse 1s ease-in-out infinite;
+}
+
+@keyframes pb-arrow-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* ── Interactive states (used inside the Play screen) ── */
+
+/* Ready to receive a pipe (pipe selected in tray) */
+.pb-row--ready {
+  border-color: rgba(189, 199, 0, 0.4) !important;
+  border-style: dashed !important;
+  cursor: pointer;
+}
+
+/* Drag hovering over an empty row */
+.pb-row--dragover {
+  background: rgba(0, 249, 12, 0.1) !important;
+  border-color: #00F90C !important;
+  border-style: solid !important;
+  box-shadow: 0 0 16px rgba(0, 249, 12, 0.3);
+}
+
+/* Water flowing through a filled pipe */
+.pb-row--flowing .pb-svg {
+  filter: hue-rotate(170deg) saturate(2.2) brightness(1.3);
+}
+
+/* Hint highlight */
+.pb-row--hinted {
+  border-color: #38bdf8 !important;
+  border-style: solid !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+/* Inline board variant (inside the Play screen layout) */
+.pb-board--inline {
+  max-width: 500px;
+  width: 100%;
+  padding: 10px 8px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* ── Operator badge on filled pipe rows ── */
+.pb-op {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-family: var(--font-chalk, 'Indie Flower', cursive);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 1px 8px;
+  cursor: default;
+  z-index: 5;
+  line-height: 1.2;
+}
+
+.pb-op--click {
+  cursor: pointer;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.pb-op--click:hover {
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+}
+
+/* Clickable rows */
+.pb-row--empty,
+.pb-row--filled {
+  cursor: pointer;
+}
+
+/* ── Row number badge ── */
+.pb-num {
+  position: absolute;
+  left: -28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono, 'Inconsolata', monospace);
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── START / TARGET tags ── */
+.pb-tag {
+  font-family: var(--font-mono, 'Inconsolata', monospace);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 2px 10px;
+  border-radius: 3px;
+}
+
+.pb-tag--start {
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  margin-bottom: 2px;
+}
+
+.pb-tag--end {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  margin-top: 2px;
+}
+
+/* ── Pipe SVG ── */
+.pb-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Value label on pipes ── */
+.pb-val {
+  font-family: var(--font-mono, 'Inconsolata', monospace);
+  font-size: 24px;
+  font-weight: 800;
+  fill: #111;
+  stroke: rgba(255, 255, 255, 0.65);
+  stroke-width: 4px;
+  paint-order: stroke;
+}
+
+/* ── Empty slot placeholder text ── */
+.pb-ph {
+  font-family: var(--font-handw, 'Homemade Apple', cursive);
+  font-size: 26px;
+  fill: rgba(74, 158, 222, 0.4);
+}
+
+/* ── Connector strip between rows ── */
+.pb-conn {
+  width: 100%;
+  height: 10px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.pb-gap {
+  height: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Slot group wrapper ── */
+.pb-slot-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Demo page ── */
+.pb-demo {
+  padding: 40px 20px;
+  min-height: 100vh;
+  background: var(--chalk-green, #274C43);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0px, transparent 28px,
+    rgba(255, 255, 255, 0.013) 28px, rgba(255, 255, 255, 0.013) 29px
+  );
+}
+
+.pb-demo-title {
+  font-family: var(--font-chalk, 'Indie Flower', cursive);
+  color: var(--chalk-white, #FFFEFE);
+  font-size: 28px;
+  margin-bottom: 24px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.pb-back-btn {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  font-family: var(--font-chalk, 'Indie Flower', cursive);
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--chalk-white, #FFFEFE);
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  padding: 4px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  z-index: 10;
+}
+
+.pb-back-btn:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .pb-board {
+    max-width: 100%;
+    padding: 14px 10px;
+  }
+  .pb-num {
+    left: -22px;
+    width: 16px;
+    height: 16px;
+    font-size: 8px;
+  }
+  .pb-val { font-size: 20px; }
+  .pb-ph  { font-size: 22px; }
+  .pb-tag { font-size: 9px; padding: 1px 8px; }
+}

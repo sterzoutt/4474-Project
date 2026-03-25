@@ -822,7 +822,7 @@
   flex-shrink: 0;
 }
 
-/* Pipe body — horizontal metallic barrel */
+/* Pipe body — horizontal metallic barrel using PNG texture */
 .pipe-chip span.pipe-chip__body {
   display: flex;
   align-items: center;
@@ -830,13 +830,13 @@
   min-width: 92px;
   width: auto;
   height: 42px;
-  background: linear-gradient(180deg,
-    var(--pipe-metal-shine) 0%,
-    var(--pipe-metal-hi)    10%,
-    var(--pipe-metal-mid)   50%,
-    var(--pipe-metal-lo)    90%,
-    #888                   100%
-  );
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.18) 0%,
+      rgba(0,0,0,0.06) 50%,
+      rgba(0,0,0,0.24) 100%
+    ),
+    url('/straight-pipe.png') repeat-x center / auto 100%;
   border-top:    3px solid var(--pipe-metal-shine);
   border-bottom: 3px solid #333;
   border-left:   none;
@@ -1042,4 +1042,199 @@ button.pipe-chip--action:nth-of-type(3).pipe-chip--selected {
   .slot__val { font-size: 22px; }
   .pipe-chip span.pipe-chip__body { min-width: 72px; height: 36px; font-size: 20px; padding: 0 10px; }
   .pipe-chip::before, .pipe-chip::after { width: 11px; }
+  .vpipe-slot  { width: 200px; height: 50px; }
+  .vpipe-slot  { width: 82px; height: 68px; }
+  .vpipe-collar { width: 102px; }
+  .vpipe-slot .slot__val { font-size: 20px; }
+}
+
+/* ============================================================
+   VERTICAL PIPE STACK — Middle Play Area
+   Segments are TALL & NARROW — real vertical pipe sections.
+   Flange collar rings connect segments top-to-bottom.
+   Structure: [collar][segment body][collar][segment body][collar]
+   ============================================================ */
+
+/* ─────────────────────────────────────────────────────────── */
+.vpipe-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Pipe segment body — TALL & NARROW like a real vertical pipe ── */
+.vpipe-slot {
+  width: 96px;      /* pipe outer diameter */
+  height: 80px;     /* segment length */
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: filter 0.18s;
+}
+.vpipe-slot:hover { filter: brightness(1.14); }
+
+/* ── Barrel — the cylindrical face of the pipe ── */
+/* Left-to-right gradient simulates a 3D cylindrical surface:
+   dark edges (shadow), bright highlight strip off-center left,
+   then mid-tone across the body — exactly like real metallic pipe. */
+.vpipe-inner {
+  width: 100%;
+  height: 100%;
+  /* Pipe walls: left and right borders only (top/bottom are the collar rings) */
+  border-left:  5px solid #111;
+  border-right: 5px solid #111;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ── EMPTY slot — dashed pipe walls, dark interior ── */
+.vpipe-slot--empty .vpipe-inner {
+  background: rgba(0, 0, 0, 0.22);
+  border-left:  5px dashed rgba(74,158,222,0.45);
+  border-right: 5px dashed rgba(74,158,222,0.45);
+}
+
+/* ── FILLED slot — metallic cylindrical pipe using PNG + gradient ── */
+.vpipe-slot--filled .vpipe-inner {
+  /* PNG tiles horizontally; gradient overlay creates the rounded-surface illusion */
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,0.55)   0%,
+      rgba(0,0,0,0.12)  12%,
+      rgba(255,255,255,0.22) 22%,
+      rgba(255,255,255,0.08) 50%,
+      rgba(0,0,0,0.12)  78%,
+      rgba(0,0,0,0.5)  100%
+    ),
+    url('/straight-pipe.png') repeat-x center / auto 100%;
+  border-color: #0a0a0a;
+}
+
+/* ── READY ── */
+.vpipe-slot--ready .vpipe-inner {
+  background: rgba(189,199,0,0.1);
+  border-left:  5px solid var(--accent-yellow);
+  border-right: 5px solid var(--accent-yellow);
+  animation: slotPulse 0.9s ease infinite alternate;
+}
+
+/* ── DRAG-OVER ── */
+.vpipe-slot--dragover .vpipe-inner {
+  background: rgba(0,249,12,0.12);
+  border-left:  5px solid var(--accent-green);
+  border-right: 5px solid var(--accent-green);
+  box-shadow: inset 0 0 18px rgba(0,249,12,0.2), 0 0 8px rgba(0,249,12,0.3);
+}
+
+/* ── FLOWING water — blue water rushes through the pipe ── */
+.vpipe-slot--flowing .vpipe-inner {
+  background: linear-gradient(90deg,
+    #0a2a4a 0%, #0369a1 10%,
+    #0ea5e9 28%, #38bdf8 50%,
+    #0ea5e9 72%, #0369a1 90%, #0a2a4a 100%
+  ) !important;
+  border-color: #38bdf8 !important;
+  box-shadow: inset 0 0 20px rgba(125,211,252,0.3), 0 0 14px rgba(56,189,248,0.5) !important;
+  animation: waterSlotFill 0.6s ease-out forwards;
+}
+@keyframes waterSlotFill {
+  0%   { filter: brightness(1); }
+  50%  { filter: hue-rotate(120deg) saturate(2.2) brightness(1.35); }
+  100% { filter: hue-rotate(130deg) saturate(2.8) brightness(1.5); }
+}
+
+/* ── HINTED ── */
+.vpipe-slot--hinted .vpipe-inner {
+  border-left:  5px solid #38bdf8 !important;
+  border-right: 5px solid #38bdf8 !important;
+  background: rgba(56,189,248,0.1);
+  box-shadow: inset 0 0 14px rgba(56,189,248,0.4), 0 0 10px rgba(56,189,248,0.3);
+}
+
+/* ── Flange collar ring — wraps around the pipe slightly wider ──
+   This is what a real pipe coupling / flange looks like:
+   a thicker ring that joins two pipe sections together.
+   Uses the pipe PNG tiled horizontally so it matches the overall pipe look. */
+.vpipe-collar {
+  width: 120px;   /* wider than the 96px barrel = protruding ring */
+  height: 20px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+  /* PNG + metallic gradient overlay */
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.18) 0%,
+      rgba(0,0,0,0.05) 50%,
+      rgba(0,0,0,0.28) 100%
+    ),
+    url('/straight-pipe.png') repeat-x center / auto 100%;
+  border-top:    2px solid #d0d0d0;
+  border-bottom: 2px solid #0a0a0a;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 4px rgba(255,255,255,0.2);
+}
+/* Bolt-stud detail on each collar side */
+.vpipe-collar::before,
+.vpipe-collar::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 180%;
+  background: linear-gradient(90deg, #2a2a2a, #777, #2a2a2a);
+  border: 1px solid #111;
+  border-radius: 2px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+.vpipe-collar::before { left: 10px; }
+.vpipe-collar::after  { right: 10px; }
+
+.vpipe-collar--flowing {
+  background:
+    linear-gradient(180deg,
+      rgba(186,230,253,0.25) 0%,
+      rgba(14,165,233,0.1) 50%,
+      rgba(12,74,110,0.4) 100%
+    ),
+    url('/straight-pipe.png') repeat-x center / auto 100%;
+  border-top-color:    #bae6fd;
+  border-bottom-color: #0c4a6e;
+  box-shadow: 0 0 16px rgba(56,189,248,0.75), inset 0 1px 4px rgba(186,230,253,0.3);
+}
+
+/* ── Text inside pipe slots ── */
+.vpipe-slot .slot__val {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(0,0,0,1), 0 1px 4px rgba(0,0,0,0.95);
+  line-height: 1;
+}
+.vpipe-slot .slot__op {
+  font-family: var(--font-chalk);
+  font-size: 11px;
+  color: rgba(255,255,255,0.9);
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  cursor: default;
+  line-height: 1;
+}
+.vpipe-slot .slot__op--clickable       { cursor: pointer; border-color: rgba(255,255,255,0.6); }
+.vpipe-slot .slot__op--clickable:hover { background: rgba(0,0,0,0.65); }
+.vpipe-slot .slot__ph {
+  font-family: var(--font-handw);
+  font-size: 26px;
+  color: rgba(74,158,222,0.6);
 }

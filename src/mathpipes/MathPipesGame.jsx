@@ -192,7 +192,7 @@ function MathPipesGame({ mode, difficulty, onBack }) {
     if (allFilled) {
       parts.push({ type: resultIsCorrect ? 'res-ok' : 'res-no', text: String(liveResult) })
     } else {
-      parts.push({ type: 'blank', text: '?' })
+      parts.push({ type: 'num', text: String(puzzle.target) })
     }
     return parts
   }, [puzzle, operators, slots, allFilled, liveResult, resultIsCorrect])
@@ -268,7 +268,7 @@ function MathPipesGame({ mode, difficulty, onBack }) {
         {/* Equals + result */}
         <span className="mp-eq-sym">=</span>
         <div className={resultClass()}>
-          {allFilled ? liveResult : '?'}
+          {allFilled ? liveResult : puzzle.target}
         </div>
       </div>
 

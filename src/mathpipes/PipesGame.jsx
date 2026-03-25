@@ -1,14 +1,96 @@
 import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from 'react'
 import { getPuzzle }            from './puzzleGenerator'
 import { evaluate, isComplete } from './evaluator'
+import { PIPE_VARIANTS }        from './pipeTypes'
 import './PipesGame.css'
 import './PipePuzzleDesign.css'
+import './PipeBoard.css'
 
 const GAME_LENGTH = 8   // questions per session
 const RULER_MAX   = 20  // fixed 1–20 ruler on both pipes
 
 function defaultOps(count, mode) {
   return Array(count).fill(mode === 'subtraction' ? '-' : '+')
+}
+
+// ── Pipe board SVG helpers (visual only — copied from PipeBoard.jsx) ─────────
+
+const PIPE_D = {
+  'left-up':  'M 50,0 L 50,18 Q 50,35 70,35 L 430,35 Q 450,35 450,52 L 450,70',
+  'right-up': 'M 450,0 L 450,18 Q 450,35 430,35 L 70,35 Q 50,35 50,52 L 50,70',
+}
+
+const CONN_X = { left: 50, right: 450 }
+
+function PipeSVG({ variant, value, kind }) {
+  const d = PIPE_D[variant]
+  const grad =
+    kind === 'start' || kind === 'end'
+      ? 'url(#pb-gFixed)'
+      : 'url(#pb-gPipe)'
+
+  return (
+    <svg viewBox="0 0 500 70" className="pb-svg">
+      <path
+        d={d} fill="none" stroke="rgba(0,0,0,0.5)"
+        strokeWidth="24" strokeLinecap="round" strokeLinejoin="round"
+      />
+      <path
+        d={d} fill="none" stroke={grad}
+        strokeWidth="18" strokeLinecap="round" strokeLinejoin="round"
+      />
+      <path
+        d={d} fill="none" stroke="url(#pb-gShine)"
+        strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"
+      />
+      <text
+        x="250" y="35"
+        textAnchor="middle" dominantBaseline="central"
+        className="pb-val"
+      >
+        {value}
+      </text>
+    </svg>
+  )
+}
+
+function EmptySlotSVG({ expectedSide }) {
+  const x = expectedSide ? CONN_X[expectedSide] : null
+
+  return (
+    <svg viewBox="0 0 500 70" className="pb-svg">
+      <line
+        x1="80" y1="35" x2="420" y2="35"
+        stroke="rgba(74,158,222,0.25)" strokeWidth="2" strokeDasharray="10 6"
+      />
+      {x != null && (
+        <>
+          <line
+            x1={x} y1="0" x2={x} y2="28"
+            stroke="rgba(189,199,0,0.55)" strokeWidth="2.5" strokeDasharray="4 3"
+          />
+          <polygon
+            points={`${x - 11},28 ${x + 11},28 ${x},10`}
+            fill="#BDC700" opacity="0.8"
+          />
+        </>
+      )}
+      <text x="250" y="52" textAnchor="middle" className="pb-ph">?</text>
+    </svg>
+  )
+}
+
+function PBConnector({ side }) {
+  if (!side) return <div className="pb-gap" />
+  const x = CONN_X[side]
+  return (
+    <svg viewBox="0 0 500 10" className="pb-conn">
+      <line
+        x1={x} y1="0" x2={x} y2="10"
+        stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinecap="round"
+      />
+    </svg>
+  )
 }
 
 // ── 1–20 Measurement pipe ─────────────────────────────────────────────────────
@@ -417,6 +499,11 @@ function PipesGame({ mode, onBack }) {
   const nSlots   = puzzle.slotCount
   const modePill = { addition: '+ Addition', subtraction: '− Subtraction', mixed: '± Mixed' }[mode]
 
+  // Pipe board variant computation — alternating left-up / right-up
+  const rowVariant = (i) => i % 2 === 0 ? 'left-up' : 'right-up'
+  const boardActiveRow = isActive ? slots.findIndex(s => s === null) : -1
+  const endVariant = nSlots % 2 === 0 ? 'left-up' : 'right-up'
+
   const boardCls = [
     'pg-pipes-area',
     transPhase === 'exit'  ? 'pg-trans-exit'  : '',
@@ -523,44 +610,99 @@ function PipesGame({ mode, onBack }) {
                 </p>
               )}
 
-              {/* Slot row */}
-              <div className="slot-row slot-row--center">
+              {/* Pipe board — connected S-curve pipe layout */}
+              <div className="pb-board pb-board--inline">
+                {/* SVG gradient defs (hidden, referenced by all pipe SVGs) */}
+                <svg width="0" height="0" className="pb-defs">
+                  <defs>
+                    <linearGradient id="pb-gPipe" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#ddd" />
+                      <stop offset="30%"  stopColor="#b5b5b5" />
+                      <stop offset="60%"  stopColor="#888" />
+                      <stop offset="100%" stopColor="#555" />
+                    </linearGradient>
+                    <linearGradient id="pb-gFixed" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#ffe680" />
+                      <stop offset="30%"  stopColor="#ffd700" />
+                      <stop offset="60%"  stopColor="#daa520" />
+                      <stop offset="100%" stopColor="#b8860b" />
+                    </linearGradient>
+                    <linearGradient id="pb-gShine" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="white" stopOpacity="0.5" />
+                      <stop offset="45%"  stopColor="white" stopOpacity="0.12" />
+                      <stop offset="100%" stopColor="white" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                {/* Start pipe (fixed) */}
+                <div className="pb-row pb-row--fixed">
+                  <span className="pb-tag pb-tag--start">START</span>
+                  <PipeSVG variant="right-up" value={puzzle.start} kind="start" />
+                </div>
+
+                <PBConnector side="left" />
+
+                {/* Playable rows */}
                 {slots.map((slot, i) => {
-                  const slotCls = [
-                    'slot',
-                    slot                                          ? 'slot--filled'   : '',
-                    !slot && isActive && selIdx !== null           ? 'slot--ready'    : '',
-                    !slot && dragOverSlot === i                    ? 'slot--dragover' : '',
-                    flowing && slot                               ? 'slot--flowing'  : '',
-                    slot?.pipeIdx === hintPipeIdx                  ? 'slot--hinted'   : '',
+                  const variant = rowVariant(i)
+                  const expectedSide = i === 0
+                    ? 'left'
+                    : slots[i - 1] ? PIPE_VARIANTS[rowVariant(i - 1)].downSide : null
+
+                  const rowCls = [
+                    'pb-row',
+                    slot                                ? 'pb-row--filled'   : 'pb-row--empty',
+                    boardActiveRow === i                 ? 'pb-row--active'   : '',
+                    !slot && isActive && selIdx !== null ? 'pb-row--ready'    : '',
+                    dragOverSlot === i                   ? 'pb-row--dragover' : '',
+                    flowing && slot                     ? 'pb-row--flowing'  : '',
+                    slot?.pipeIdx === hintPipeIdx        ? 'pb-row--hinted'   : '',
                   ].filter(Boolean).join(' ')
 
                   return (
-                    <div
-                      key={i}
-                      className={slotCls}
-                      onClick={() => handleSlotClick(i)}
-                      onDragOver={(e) => handleSlotDragOver(e, i)}
-                      onDragLeave={handleSlotDragLeave}
-                      onDrop={(e) => handleSlotDrop(e, i)}
-                    >
-                      {slot ? (
-                        <>
-                          <button
-                            className={`slot__op${mode === 'mixed' ? ' slot__op--clickable' : ''}`}
-                            onClick={(e) => { e.stopPropagation(); handleOpToggle(i) }}
-                            disabled={mode !== 'mixed'}
-                          >
-                            {operators[i]}
-                          </button>
-                          <span className="slot__val">{slot.value}</span>
-                        </>
-                      ) : (
-                        <span className="slot__ph">?</span>
+                    <div key={i} className="pb-slot-group">
+                      <div
+                        className={rowCls}
+                        onClick={() => handleSlotClick(i)}
+                        onDragOver={(e) => handleSlotDragOver(e, i)}
+                        onDragLeave={handleSlotDragLeave}
+                        onDrop={(e) => handleSlotDrop(e, i)}
+                      >
+                        <span className="pb-num">{i + 1}</span>
+                        {slot ? (
+                          <>
+                            <PipeSVG variant={variant} value={slot.value} />
+                            <button
+                              className={`pb-op${mode === 'mixed' ? ' pb-op--click' : ''}`}
+                              onClick={(e) => { e.stopPropagation(); handleOpToggle(i) }}
+                              disabled={mode !== 'mixed'}
+                            >
+                              {operators[i]}
+                            </button>
+                          </>
+                        ) : (
+                          <EmptySlotSVG expectedSide={expectedSide} />
+                        )}
+                      </div>
+                      {i < nSlots - 1 && (
+                        <PBConnector side={slot ? PIPE_VARIANTS[variant].downSide : null} />
                       )}
                     </div>
                   )
                 })}
+
+                <PBConnector side={
+                  slots[nSlots - 1]
+                    ? PIPE_VARIANTS[rowVariant(nSlots - 1)].downSide
+                    : null
+                } />
+
+                {/* End pipe (fixed) */}
+                <div className="pb-row pb-row--fixed">
+                  <PipeSVG variant={endVariant} value={puzzle.target} kind="end" />
+                  <span className="pb-tag pb-tag--end">TARGET</span>
+                </div>
               </div>
 
               {/* Live equation strip */}
@@ -575,7 +717,7 @@ function PipesGame({ mode, onBack }) {
                   </Fragment>
                 ))}
                 <span className="eq-strip__eq">=</span>
-                <strong className="eq-strip__result">{allFilled ? liveResult : '?'}</strong>
+                <strong className="eq-strip__result">{allFilled ? liveResult : puzzle.target}</strong>
                 {isMatch && <span className="eq-strip__check"> &#10003;</span>}
               </div>
 
