@@ -1,4 +1,8 @@
-import { loadSession, isSessionLoadable } from './mathpipes/pipesSession'
+import {
+  loadSession,
+  isSessionLoadable,
+  SESSION_QUESTION_COUNT,
+} from './mathpipes/pipesSession'
 import './ModeSelectScreen.css'
 
 const MODE_LABEL = {
@@ -8,8 +12,11 @@ const MODE_LABEL = {
 }
 
 export default function ModeSelectScreen({ onBack, onEnterGame }) {
+  const snapshot = loadSession()
   const canContinue = isSessionLoadable()
-  const saved = canContinue ? loadSession() : null
+  const saved = canContinue && snapshot ? snapshot : null
+
+  const hasRawSave = snapshot != null && snapshot.v === 1
 
   return (
     <div className="app home-screen mode-select-screen">
@@ -17,19 +24,57 @@ export default function ModeSelectScreen({ onBack, onEnterGame }) {
         <span className="mode-select-back-icon">&#8592;</span> Menu
       </button>
       <div className="menu-container mode-select-inner">
-        <h1 className="game-title mode-select-title">Choose mode</h1>
-        <p className="mode-select-hint">New game clears any saved run for a fresh start. Continue resumes your last session.</p>
+        <h1 className="game-title mode-select-title">Before you play</h1>
+        <p className="mode-select-hint">
+          Pick a math type. Your run is saved automatically — continue anytime, or start a new game
+          (that replaces the save).
+        </p>
 
-        {canContinue && saved && (
+        <section className="mode-select-save-section" aria-label="Saved progress">
+          <h2 className="mode-select-section-title">Current save</h2>
+          {saved ? (
+            <div className="mode-select-save-card">
+              <div className="mode-select-save-row">
+                <span className="mode-select-save-label">Mode</span>
+                <span className="mode-select-save-val">{MODE_LABEL[saved.mode]}</span>
+              </div>
+              <div className="mode-select-save-row">
+                <span className="mode-select-save-label">Progress</span>
+                <span className="mode-select-save-val">
+                  Question {saved.questionNum} / {SESSION_QUESTION_COUNT}
+                </span>
+              </div>
+              <div className="mode-select-save-row">
+                <span className="mode-select-save-label">Score</span>
+                <span className="mode-select-save-val">
+                  {typeof saved.score === 'number' ? saved.score : 0} pts
+                </span>
+              </div>
+            </div>
+          ) : hasRawSave && !canContinue ? (
+            <p className="mode-select-save-empty">
+              A save file is present but could not be loaded. Start a new game below to replace it.
+            </p>
+          ) : (
+            <p className="mode-select-save-empty">
+              No saved game yet. Play once to create a save — it updates as you go.
+            </p>
+          )}
+        </section>
+
+        {saved && (
           <button
             type="button"
             className="menu-btn mode-select-continue"
             onClick={() => onEnterGame({ resume: true })}
           >
-            Continue — {MODE_LABEL[saved.mode]} · Q{saved.questionNum}/8
+            Continue saved game
           </button>
         )}
 
+        <h2 className="mode-select-section-title mode-select-section-title--spaced">
+          New game — choose type
+        </h2>
         <div className="mode-select-grid">
           {['addition', 'subtraction', 'mixed'].map((m) => (
             <button
@@ -38,7 +83,7 @@ export default function ModeSelectScreen({ onBack, onEnterGame }) {
               className="menu-btn mode-select-new"
               onClick={() => onEnterGame({ resume: false, mode: m })}
             >
-              New game — {MODE_LABEL[m]}
+              {MODE_LABEL[m]}
             </button>
           ))}
         </div>

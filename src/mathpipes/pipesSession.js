@@ -4,7 +4,9 @@ export const SESSION_KEY = 'pipesGameSession'
 export const GAME_MODE_STORAGE_KEY = 'gameMode'
 
 const VERSION = 1
-const Q_MAX = 8
+/** Questions per run — shown on mode select & session UI */
+export const SESSION_QUESTION_COUNT = 8
+const Q_MAX = SESSION_QUESTION_COUNT
 
 function defaultOps(count, mode) {
   return Array(count).fill(mode === 'subtraction' ? '-' : '+')
