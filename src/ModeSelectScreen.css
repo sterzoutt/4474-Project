@@ -1,0 +1,67 @@
+.mode-select-screen {
+  position: relative;
+}
+
+.mode-select-back {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  z-index: 2;
+  font-family: 'Indie Flower', cursive;
+  font-size: 1.15rem;
+  color: #d8ffd8;
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(123, 207, 118, 0.55);
+  border-radius: 10px;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mode-select-back:hover {
+  background: rgba(0, 0, 0, 0.65);
+  border-color: #7bcf76;
+}
+
+.mode-select-back-icon {
+  margin-right: 0.35rem;
+}
+
+.mode-select-inner {
+  padding-top: 2.5rem;
+}
+
+.mode-select-title {
+  font-size: clamp(2.2rem, 6vw, 3.2rem) !important;
+}
+
+.mode-select-hint {
+  font-family: 'Indie Flower', cursive;
+  font-size: 1.05rem;
+  color: rgba(216, 255, 216, 0.72);
+  max-width: 22rem;
+  text-align: center;
+  line-height: 1.35;
+  margin: -0.5rem 0 0.5rem;
+}
+
+.mode-select-continue {
+  background: linear-gradient(180deg, #3d7ab8 0%, #265a8a 100%) !important;
+  border-color: #6eb8ff !important;
+}
+
+.mode-select-continue:hover {
+  background: linear-gradient(180deg, #4a8ecc 0%, #2f6aa0 100%) !important;
+}
+
+.mode-select-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.mode-select-new {
+  width: 280px;
+}
