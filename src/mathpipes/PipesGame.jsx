@@ -1,7 +1,12 @@
 import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from 'react'
-import { getPuzzle }            from './puzzleGenerator'
-import { evaluate, isComplete } from './evaluator'
+import { getPuzzle } from './puzzleGenerator'
+import { isComplete } from './evaluator'
 import { PIPE_VARIANTS }        from './pipeTypes'
+import {
+  evaluateSequential,
+  formatLiveEquationString,
+  validatePlacement,
+} from './equationValidation'
 import {
   buildInitialMountState,
   saveSession,
@@ -307,7 +312,6 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
   const qRef = useRef(M.questionNum)
   qRef.current = questionNum
 
-  // All 8 questions use 'mini' difficulty — keeps all values within 1–20
   const puzzle = useMemo(
     () => getPuzzle('mini', mode, questionNum - 1),
     [mode, questionNum]
@@ -326,6 +330,9 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
   // Drag-and-drop presentational state (no logic changes to existing handlers)
   const [dragIdx,      setDragIdx]      = useState(null)
   const [dragOverSlot, setDragOverSlot] = useState(null)
+
+  const [trayShakeIdx, setTrayShakeIdx] = useState(null)
+  const [slotShakeIdx, setSlotShakeIdx] = useState(null)
 
   const skipPuzzleResetOnce = useRef(M.skipFirstPuzzleReset)
 
@@ -387,7 +394,8 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
   const usedIdx    = slots.filter(Boolean).map((s) => s.pipeIdx)
   const slotVals   = slots.map((s) => (s ? s.value : null))
   const allFilled  = isComplete(slotVals)
-  const liveResult = evaluate(puzzle.start, slotVals, operators)
+  const liveResult = evaluateSequential(puzzle.start, slotVals, operators)
+  const liveEquationStr = formatLiveEquationString(puzzle.start, slotVals, operators)
   const isMatch    = allFilled && liveResult === puzzle.target
   const isFlowing  = gameState === 'flowing'
   const isCorrect  = gameState === 'correct'
@@ -439,6 +447,32 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
     return () => clearTimeout(t)
   }, [transPhase])
 
+  const rejectPlacement = useCallback((trayPipeIdx, slotIdx) => {
+    setTrayShakeIdx(trayPipeIdx)
+    if (slotIdx != null) setSlotShakeIdx(slotIdx)
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext
+      if (Ctx) {
+        const ctx = new Ctx()
+        const o = ctx.createOscillator()
+        const g = ctx.createGain()
+        o.type = 'sine'
+        o.frequency.value = 165
+        g.gain.value = 0.04
+        o.connect(g)
+        g.connect(ctx.destination)
+        o.start()
+        o.stop(ctx.currentTime + 0.07)
+      }
+    } catch {
+      /* ignore */
+    }
+    window.setTimeout(() => {
+      setTrayShakeIdx(null)
+      setSlotShakeIdx(null)
+    }, 380)
+  }, [])
+
   // ── Interactions ──────────────────────────────────────────────────────────
   const handleTrayClick = useCallback((i) => {
     if (!isActive) return
@@ -456,10 +490,20 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
       const next = [...slots]; next[i] = null; setSlots(next); return
     }
     if (selIdx === null) return
+    const firstEmpty = slots.findIndex((s) => s === null)
+    if (i !== firstEmpty) {
+      rejectPlacement(selIdx, i)
+      return
+    }
+    const { ok } = validatePlacement(puzzle, slots, operators, mode, i, selIdx)
+    if (!ok) {
+      rejectPlacement(selIdx, i)
+      return
+    }
     const next = [...slots]
     next[i] = { pipeIdx: selIdx, value: puzzle.pipes[selIdx] }
     setSlots(next); setSelIdx(null)
-  }, [isActive, slots, selIdx, puzzle.pipes])
+  }, [isActive, slots, selIdx, puzzle, operators, mode, rejectPlacement])
 
   const handleOpToggle = useCallback((i) => {
     if (!isActive || mode !== 'mixed') return
@@ -541,12 +585,24 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
     e.preventDefault()
     setDragOverSlot(null)
     if (dragIdx === null || !isActive || slots[i] !== null) return
+    const firstEmpty = slots.findIndex((s) => s === null)
+    if (i !== firstEmpty) {
+      rejectPlacement(dragIdx, i)
+      setDragIdx(null)
+      return
+    }
+    const { ok } = validatePlacement(puzzle, slots, operators, mode, i, dragIdx)
+    if (!ok) {
+      rejectPlacement(dragIdx, i)
+      setDragIdx(null)
+      return
+    }
     const next = [...slots]
     next[i] = { pipeIdx: dragIdx, value: puzzle.pipes[dragIdx] }
     setSlots(next)
     setSelIdx(null)
     setDragIdx(null)
-  }, [dragIdx, isActive, slots, puzzle.pipes])
+  }, [dragIdx, isActive, slots, puzzle, operators, mode, rejectPlacement])
 
   // Flow animation timing helpers
   const f = (n) => `${0.3 + n * 0.28}s`
@@ -630,6 +686,12 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
           )}
         </div>
 
+        <div className="pg-target-ribbon" aria-live="polite">
+          <span className="pg-target-ribbon__prefix">TARGET</span>
+          <span className="pg-target-ribbon__eq">=</span>
+          <span className="pg-target-ribbon__num">{puzzle.target}</span>
+        </div>
+
         {/* ── Main Body (valve + puzzle) ── */}
         <div className="game-body">
 
@@ -666,8 +728,8 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
               {isActive && (
                 <p className="slot-grid__tip">
                   {selIdx !== null
-                    ? `Pipe ${puzzle.pipes[selIdx]} selected — click a slot to place`
-                    : 'Select a pipe below, then click a slot'}
+                    ? `Pipe ${puzzle.pipes[selIdx]} selected — place on the highlighted row (or drop there)`
+                    : 'Select a pipe below, then place it on the highlighted row only'}
                 </p>
               )}
 
@@ -719,6 +781,8 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
                     dragOverSlot === i                   ? 'pb-row--dragover' : '',
                     flowing && slot                     ? 'pb-row--flowing'  : '',
                     slot?.pipeIdx === hintPipeIdx        ? 'pb-row--hinted'   : '',
+                    slotShakeIdx === i                   ? 'pb-row--shake-error' : '',
+                    isMatch && slot                      ? 'pb-row--solved-glow' : '',
                   ].filter(Boolean).join(' ')
 
                   return (
@@ -766,8 +830,15 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
                 </div>
               </div>
 
-              {/* Live equation strip */}
-              <div className={`eq-strip${!allFilled ? '' : isMatch ? ' eq-strip--match' : ''}`}>
+              <p className="pg-live-eq-line" title="Live expression (filled slots first)">
+                {liveEquationStr}
+              </p>
+
+              {/* Live equation: left = playable expression, right = fixed goal only */}
+              <div
+                className={`eq-strip${!allFilled ? '' : isMatch ? ' eq-strip--match' : ''}`}
+                aria-label={`Equation: build the left side to equal ${puzzle.target}`}
+              >
                 <span className="eq-strip__num">{puzzle.start}</span>
                 {slots.map((s, i) => (
                   <Fragment key={i}>
@@ -778,9 +849,22 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
                   </Fragment>
                 ))}
                 <span className="eq-strip__eq">=</span>
-                <strong className="eq-strip__result">{allFilled ? liveResult : puzzle.target}</strong>
+                <strong className="eq-strip__result eq-strip__goal">{puzzle.target}</strong>
                 {isMatch && <span className="eq-strip__check"> &#10003;</span>}
               </div>
+
+              <p className={`pg-eq-hint${isMatch ? ' pg-eq-hint--match' : ''}`}>
+                {!allFilled && (
+                  <>Running total (left): <strong>{liveResult}</strong></>
+                )}
+                {allFilled && !isMatch && (
+                  <>
+                    Left side = <strong>{liveResult}</strong>, goal = <strong>{puzzle.target}</strong>
+                    <span className="pg-eq-hint__warn"> — adjust pipes or operators</span>
+                  </>
+                )}
+                {isMatch && <span>Left side equals the goal.</span>}
+              </p>
 
             </div>{/* end slot-grid */}
 
@@ -842,6 +926,7 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
                 st === 'selected' ? 'pipe-chip--selected' : '',
                 st === 'used'     ? 'pipe-chip--used'     : '',
                 st === 'hint'     ? 'pipe-chip--hinted'   : '',
+                trayShakeIdx === i ? 'pipe-chip--shake-error' : '',
               ].filter(Boolean).join(' ')
 
               return (

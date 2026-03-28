@@ -1,3 +1,5 @@
+import { validatePuzzle, ratePuzzleDifficulty } from './puzzleSolver'
+
 // Mulberry32 seeded PRNG — deterministic, fast, good distribution
 function createRng(seed) {
   let s = (seed >>> 0) || 1
@@ -23,97 +25,219 @@ function shuffleArr(arr, rng) {
   return a
 }
 
-// Per-difficulty parameters
-const DIFFICULTY = {
-  // 'mini' guarantees start and target stay within 1-20 (ruler range)
-  mini:   { pipeRange: [1, 6],   solutionCount: 2, totalPipes: 4,
-            addStart: [1, 10],   subTarget: [1, 8], mixStart: [5, 13], maxVal: 20 },
-  easy:   { pipeRange: [1, 12],  solutionCount: 2, totalPipes: 4, targetRange: [1, 20] },
-  medium: { pipeRange: [2, 18],  solutionCount: 3, totalPipes: 5, targetRange: [1, 30] },
-  hard:   { pipeRange: [3, 25],  solutionCount: 4, totalPipes: 6, targetRange: [1, 40] },
+const DEV = import.meta.env.DEV
+
+function devLog(msg, data) {
+  if (DEV) console.log(`[puzzle-gen] ${msg}`, data)
+}
+
+function devReject(reason, detail) {
+  if (DEV) console.warn(`[puzzle-gen] rejected: ${reason}`, detail)
 }
 
 /**
- * Generate one solvable puzzle.
- * Strategy per mode:
- *  - addition:    target = start + sum(pipes)  — always valid
- *  - subtraction: start  = target + sum(pipes)  — always valid, start > target
- *  - mixed:       random ops, retry if target out of range
+ * Tier params — 'mini' matches the shipped game (2 slots, 4 pipes, ruler 1–20).
+ * Other keys preserved for getPuzzle(difficulty, …) callers.
  */
-function generatePuzzle(difficulty, mode, seed) {
-  const cfg = DIFFICULTY[difficulty]
-  const rng = createRng(seed)
+const DIFFICULTY = {
+  mini: {
+    slotCount: 2,
+    totalPipes: 4,
+    pipeRange: [1, 6],
+    innerAttempts: 80,
+  },
+  easy: {
+    slotCount: 2,
+    totalPipes: 4,
+    pipeRange: [1, 8],
+    innerAttempts: 80,
+  },
+  medium: {
+    slotCount: 3,
+    totalPipes: 6,
+    pipeRange: [1, 9],
+    innerAttempts: 100,
+  },
+  hard: {
+    slotCount: 3,
+    totalPipes: 7,
+    pipeRange: [2, 10],
+    innerAttempts: 120,
+  },
+}
 
-  for (let attempt = 0; attempt < 30; attempt++) {
-    const solutionPipes = Array.from(
-      { length: cfg.solutionCount },
-      () => randInt(rng, cfg.pipeRange[0], cfg.pipeRange[1])
-    )
+function genAddition(slotCount, pipeRange, rng) {
+  const [lo, hi] = pipeRange
+  const values = []
+  let running = randInt(rng, 2, 14)
+  const start = running
+  for (let i = 0; i < slotCount; i++) {
+    const maxV = Math.min(hi, 20 - running)
+    if (maxV < lo) return null
+    const v = randInt(rng, lo, maxV)
+    values.push(v)
+    running += v
+  }
+  const target = running
+  if (start < 1 || start > 20 || target < 1 || target > 20) return null
+  return { start, target, values, ops: values.map(() => '+') }
+}
 
-    let operators
-    let start
-    let target
+function genSubtraction(slotCount, pipeRange, rng) {
+  const [lo, hi] = pipeRange
+  const values = []
+  let running = randInt(rng, Math.max(8, lo + 6), 20)
+  const start = running
+  for (let i = 0; i < slotCount; i++) {
+    const maxV = Math.min(hi, running - 1)
+    if (maxV < lo) return null
+    const v = randInt(rng, lo, maxV)
+    values.push(v)
+    running -= v
+  }
+  const target = running
+  if (target < 1 || target > 20 || start > 20) return null
+  return { start, target, values, ops: values.map(() => '-') }
+}
 
-    if (mode === 'addition') {
-      operators = solutionPipes.map(() => '+')
-      const aMin = cfg.addStart ? cfg.addStart[0] : 1
-      const aMax = cfg.addStart ? cfg.addStart[1] : 15
-      start  = randInt(rng, aMin, aMax)
-      target = solutionPipes.reduce((acc, v) => acc + v, start)
-    } else if (mode === 'subtraction') {
-      operators = solutionPipes.map(() => '-')
-      const sMin = cfg.subTarget ? cfg.subTarget[0] : (cfg.targetRange ? cfg.targetRange[0] : 1)
-      const sMax = cfg.subTarget ? cfg.subTarget[1] : Math.min(cfg.targetRange ? cfg.targetRange[1] : 20, 20)
-      target = randInt(rng, sMin, sMax)
-      start  = solutionPipes.reduce((acc, v) => acc + v, target)
-    } else {
-      // mixed — at least one of each sign
-      operators = solutionPipes.map((_, i) =>
-        i === 0 ? '+' : i === 1 ? '-' : rng() > 0.5 ? '+' : '-'
-      )
-      const mMin = cfg.mixStart ? cfg.mixStart[0] : 5
-      const mMax = cfg.mixStart ? cfg.mixStart[1] : 25
-      start  = randInt(rng, mMin, mMax)
-      target = solutionPipes.reduce(
-        (acc, v, i) => acc + (operators[i] === '+' ? v : -v),
-        start
-      )
+function genMixed(slotCount, pipeRange, rng) {
+  const [lo, hi] = pipeRange
+  for (let t = 0; t < 120; t++) {
+    const ops = []
+    let plus = 0
+    let minus = 0
+    for (let i = 0; i < slotCount; i++) {
+      const op = rng() > 0.5 ? '+' : '-'
+      ops.push(op)
+      if (op === '+') plus++
+      else minus++
     }
+    if (slotCount >= 2 && (plus === 0 || minus === 0)) continue
 
-    // Reject degenerate puzzles
-    if (target <= 0 || target > 60 || target === start) continue
-    // Reject if any value exceeds the difficulty's max allowed value
-    if (cfg.maxVal && (start > cfg.maxVal || target > cfg.maxVal)) continue
-
-    // Build unique distractor pipes
-    const usedSet = new Set(solutionPipes)
-    const distractors = []
-    let tries = 0
-    while (distractors.length < cfg.totalPipes - cfg.solutionCount && tries < 60) {
-      const v = randInt(rng, cfg.pipeRange[0], cfg.pipeRange[1])
-      if (!usedSet.has(v)) { distractors.push(v); usedSet.add(v) }
-      tries++
+    let running = randInt(rng, 3, 17)
+    const start = running
+    const values = []
+    let bad = false
+    for (let i = 0; i < slotCount; i++) {
+      let maxV
+      if (ops[i] === '+') {
+        maxV = Math.min(hi, 20 - running)
+      } else {
+        maxV = Math.min(hi, running - 1)
+      }
+      if (maxV < lo) {
+        bad = true
+        break
+      }
+      const v = randInt(rng, lo, maxV)
+      values.push(v)
+      running = ops[i] === '+' ? running + v : running - v
+      if (running < 1 || running > 20) {
+        bad = true
+        break
+      }
     }
-    // Pad if needed
-    while (distractors.length < cfg.totalPipes - cfg.solutionCount) {
-      distractors.push(randInt(rng, cfg.pipeRange[0], cfg.pipeRange[1]))
-    }
-
-    const allPipes = shuffleArr([...solutionPipes, ...distractors], rng)
-
-    return {
-      id: seed,
-      start,
-      target,
-      pipes: allPipes,
-      slotCount: cfg.solutionCount,
-      // Prefixed with _ — used internally for hints only
-      _solution: solutionPipes.map((val, i) => ({ val, op: operators[i] })),
+    if (bad) continue
+    const target = running
+    if (target >= 1 && target <= 20 && start >= 1 && start <= 20) {
+      return { start, target, values, ops }
     }
   }
+  return null
+}
 
-  // If all attempts fail, nudge the seed and retry
-  return generatePuzzle(difficulty, mode, seed + 7)
+function buildSolution(mode, slotCount, pipeRange, rng) {
+  if (mode === 'addition') return genAddition(slotCount, pipeRange, rng)
+  if (mode === 'subtraction') return genSubtraction(slotCount, pipeRange, rng)
+  return genMixed(slotCount, pipeRange, rng)
+}
+
+function generateDistractorValues(solutionValues, count, pipeRange, rng) {
+  const [lo, hi] = pipeRange
+  const solSet = new Set(solutionValues)
+  const out = []
+  let guard = 0
+  while (out.length < count && guard < 500) {
+    guard++
+    const v = randInt(rng, lo, hi)
+    if (solSet.has(v) && rng() < 0.5) continue
+    out.push(v)
+  }
+  while (out.length < count) {
+    out.push(randInt(rng, lo, hi))
+  }
+  return out
+}
+
+function assemblePuzzle(seed, mode, tierCfg, solution, rng) {
+  const { slotCount, totalPipes } = tierCfg
+  const distractorCount = totalPipes - slotCount
+  const solutionValues = solution.values
+  const solutionOps = solution.ops
+
+  for (let dTry = 0; dTry < 40; dTry++) {
+    const distractors = generateDistractorValues(
+      solutionValues,
+      distractorCount,
+      tierCfg.pipeRange,
+      rng
+    )
+    const pipes = shuffleArr([...solutionValues, ...distractors], rng)
+
+    const puzzle = {
+      id: seed,
+      start: solution.start,
+      target: solution.target,
+      pipes,
+      slotCount,
+      defaultOperators: [...solutionOps],
+      _solution: solutionValues.map((val, i) => ({ val, op: solutionOps[i] })),
+    }
+
+    const v = validatePuzzle(puzzle, mode)
+    if (v.ok) {
+      devLog('accepted', {
+        seed,
+        mode,
+        start: puzzle.start,
+        target: puzzle.target,
+        pipes: puzzle.pipes,
+        solution: puzzle._solution,
+        difficultyEstimate: ratePuzzleDifficulty(puzzle, mode),
+      })
+      return puzzle
+    }
+    devReject(v.reason, {
+      seed,
+      solutionCount: v.solutionCount,
+      distinctAnswers: v.distinctAnswers,
+    })
+  }
+  return null
+}
+
+function generatePuzzle(difficulty, mode, seed) {
+  const tierKey = DIFFICULTY[difficulty] ? difficulty : 'mini'
+  const tierCfg = DIFFICULTY[tierKey]
+
+  for (let global = 0; global < 600; global++) {
+    const s = seed + global * 29
+    const r = createRng(s)
+    let solution = null
+    for (let inner = 0; inner < tierCfg.innerAttempts; inner++) {
+      solution = buildSolution(mode, tierCfg.slotCount, tierCfg.pipeRange, r)
+      if (solution) break
+    }
+    if (!solution) {
+      devReject('no-solution-candidate', { difficulty, mode, seed: s })
+      continue
+    }
+
+    const assembled = assemblePuzzle(s, mode, tierCfg, solution, r)
+    if (assembled) return assembled
+  }
+
+  return null
 }
 
 /**
@@ -121,7 +245,21 @@ function generatePuzzle(difficulty, mode, seed) {
  * Deterministic: same inputs always return the same puzzle.
  */
 export function getPuzzle(difficulty, mode, index) {
-  const modeSeed  = { addition: 0, subtraction: 5000, mixed: 10000 }[mode]  ?? 0
-  const diffSeed  = { easy: 0, medium: 2000, hard: 4000 }[difficulty] ?? 0
-  return generatePuzzle(difficulty, mode, modeSeed + diffSeed + index * 17 + 1)
+  const modeSeed = { addition: 0, subtraction: 5000, mixed: 10000 }[mode] ?? 0
+  const diffSeed = { easy: 0, medium: 2000, hard: 4000 }[difficulty] ?? 0
+  const seed = modeSeed + diffSeed + index * 17 + 1
+  let p = generatePuzzle(difficulty, mode, seed)
+  if (p) return p
+  p = generatePuzzle('mini', mode, seed ^ 0x9e3779b9)
+  if (p) return p
+  p = generatePuzzle('mini', mode, (seed + 1337) >>> 0)
+  if (p) return p
+  throw new Error(`[puzzle-gen] exhausted retries for ${difficulty}/${mode}`)
 }
+
+export {
+  validatePuzzle,
+  countSolutions,
+  ratePuzzleDifficulty,
+  findSolutions,
+} from './puzzleSolver'

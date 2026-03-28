@@ -188,14 +188,14 @@ function MathPipesGame({ mode, difficulty, onBack }) {
       parts.push({ type: 'op',  text: operators[i], slotIdx: i })
       parts.push({ type: slots[i] ? 'placed' : 'blank', text: slots[i] ? String(slots[i].value) : '?' })
     }
-    parts.push({ type: 'eq',     text: '=' })
-    if (allFilled) {
-      parts.push({ type: resultIsCorrect ? 'res-ok' : 'res-no', text: String(liveResult) })
-    } else {
-      parts.push({ type: 'num', text: String(puzzle.target) })
-    }
+    parts.push({ type: 'eq', text: '=' })
+    // Right side is always the goal; styling reflects whether the left equals it when complete
+    parts.push({
+      type: allFilled ? (resultIsCorrect ? 'res-ok' : 'res-no') : 'num',
+      text: String(puzzle.target),
+    })
     return parts
-  }, [puzzle, operators, slots, allFilled, liveResult, resultIsCorrect])
+  }, [puzzle, operators, slots, allFilled, resultIsCorrect])
 
   // ─── render ──────────────────────────────────────────────────────────────
 
@@ -267,8 +267,8 @@ function MathPipesGame({ mode, difficulty, onBack }) {
 
         {/* Equals + result */}
         <span className="mp-eq-sym">=</span>
-        <div className={resultClass()}>
-          {allFilled ? liveResult : puzzle.target}
+        <div className={resultClass()} title="Goal — build the left side to match this">
+          {puzzle.target}
         </div>
       </div>
 
