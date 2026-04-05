@@ -16,6 +16,7 @@ import {
 import './PipesGame.css'
 import './PipePuzzleDesign.css'
 import './PipeBoard.css'
+import { useGameAudio } from '../audio/GameAudioProvider.jsx'
 
 const GAME_LENGTH = 8   // questions per session
 const RULER_MAX   = 20  // fixed 1–20 ruler on both pipes
@@ -295,6 +296,7 @@ function EndScreen({ score, hintsTotal, onHome }) {
 
 // ── Main game ─────────────────────────────────────────────────────────────────
 function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
+  const { playSfx } = useGameAudio()
   const mountStateRef = useRef(null)
   if (mountStateRef.current === null) {
     mountStateRef.current = buildInitialMountState(mode, initialSession)
@@ -447,31 +449,18 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
     return () => clearTimeout(t)
   }, [transPhase])
 
-  const rejectPlacement = useCallback((trayPipeIdx, slotIdx) => {
-    setTrayShakeIdx(trayPipeIdx)
-    if (slotIdx != null) setSlotShakeIdx(slotIdx)
-    try {
-      const Ctx = window.AudioContext || window.webkitAudioContext
-      if (Ctx) {
-        const ctx = new Ctx()
-        const o = ctx.createOscillator()
-        const g = ctx.createGain()
-        o.type = 'sine'
-        o.frequency.value = 165
-        g.gain.value = 0.04
-        o.connect(g)
-        g.connect(ctx.destination)
-        o.start()
-        o.stop(ctx.currentTime + 0.07)
-      }
-    } catch {
-      /* ignore */
-    }
-    window.setTimeout(() => {
-      setTrayShakeIdx(null)
-      setSlotShakeIdx(null)
-    }, 380)
-  }, [])
+  const rejectPlacement = useCallback(
+    (trayPipeIdx, slotIdx) => {
+      setTrayShakeIdx(trayPipeIdx)
+      if (slotIdx != null) setSlotShakeIdx(slotIdx)
+      playSfx('wrong')
+      window.setTimeout(() => {
+        setTrayShakeIdx(null)
+        setSlotShakeIdx(null)
+      }, 380)
+    },
+    [playSfx]
+  )
 
   // ── Interactions ──────────────────────────────────────────────────────────
   const handleTrayClick = useCallback((i) => {
@@ -515,12 +504,14 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
   const handleValve = useCallback(() => {
     if (!isActive) return
     if (isMatch) {
+      playSfx('correct')
       setValveState('open')
       setGameState('flowing')
       const pts = hintsUsed === 0 ? 15 : 10
       setScore((s) => s + pts)
       setHintsTotal((h) => h + hintsUsed)
     } else if (allFilled) {
+      playSfx('wrong')
       setValveState('failed')
       const diff = liveResult - puzzle.target
       setWrongMsg(diff > 0
@@ -529,7 +520,7 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
       )
       setTimeout(() => { setValveState('locked'); setWrongMsg('') }, 1400)
     }
-  }, [isActive, isMatch, allFilled, liveResult, puzzle.target, hintsUsed])
+  }, [isActive, isMatch, allFilled, liveResult, puzzle.target, hintsUsed, playSfx])
 
   const handleReset = useCallback(() => {
     if (gameState !== 'playing' || transPhase !== null) return

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import { useGameAudio } from './audio/GameAudioProvider.jsx'
 import OptionsScreen from './OptionsScreen'
 import ModeSelectScreen from './ModeSelectScreen'
 import PipesGame from './mathpipes/PipesGame'
@@ -11,14 +12,21 @@ import {
 } from './mathpipes/pipesSession'
 
 function App() {
+  const { playUiClick } = useGameAudio()
   const [currentScreen, setCurrentScreen] = useState('menu')
   const [gameMode, setGameMode] = useState(
     () => localStorage.getItem(GAME_MODE_STORAGE_KEY) || 'addition'
   )
   const [gameBootSession, setGameBootSession] = useState(null)
 
-  const handlePlay = () => setCurrentScreen('modeSelect')
-  const handleOptions = () => setCurrentScreen('options')
+  const handlePlay = () => {
+    playUiClick()
+    setCurrentScreen('modeSelect')
+  }
+  const handleOptions = () => {
+    playUiClick()
+    setCurrentScreen('options')
+  }
   const handleQuit = () => {
     window.close()
     if (!window.closed) window.location.href = 'about:blank'
@@ -42,14 +50,27 @@ function App() {
   }
 
   if (currentScreen === 'options') {
-    return <OptionsScreen onBack={() => setCurrentScreen('menu')} />
+    return (
+      <OptionsScreen
+        onBack={() => {
+          playUiClick()
+          setCurrentScreen('menu')
+        }}
+      />
+    )
   }
 
   if (currentScreen === 'modeSelect') {
     return (
       <ModeSelectScreen
-        onBack={() => setCurrentScreen('menu')}
-        onEnterGame={handleEnterGame}
+        onBack={() => {
+          playUiClick()
+          setCurrentScreen('menu')
+        }}
+        onEnterGame={(payload) => {
+          playUiClick()
+          handleEnterGame(payload)
+        }}
       />
     )
   }
@@ -60,10 +81,12 @@ function App() {
         mode={gameMode}
         initialSession={gameBootSession}
         onBack={() => {
+          playUiClick()
           setCurrentScreen('menu')
           setGameBootSession(null)
         }}
         onAbandon={() => {
+          playUiClick()
           clearSession()
           setCurrentScreen('menu')
           setGameBootSession(null)
@@ -79,7 +102,15 @@ function App() {
         <div className="menu-buttons">
           <button className="menu-btn" onClick={handlePlay}>PLAY</button>
           <button className="menu-btn" onClick={handleOptions}>OPTIONS</button>
-          <button className="menu-btn" onClick={handleQuit}>QUIT</button>
+          <button
+            className="menu-btn"
+            onClick={() => {
+              playUiClick()
+              handleQuit()
+            }}
+          >
+            QUIT
+          </button>
         </div>
       </div>
     </div>
