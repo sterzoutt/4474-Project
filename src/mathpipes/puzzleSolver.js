@@ -2,7 +2,7 @@
  * Backend-only: enumerate solutions and validate generated puzzles.
  * Matches gameplay rules (1–20 ruler on every prefix, sequential slots).
  */
-import { evaluate } from './evaluator'
+import { evaluate } from './evaluator.js'
 
 const RULER_MIN = 1
 const RULER_MAX = 20

@@ -165,6 +165,25 @@
 }
 .audio-control:last-child { margin-bottom: 0; }
 
+.audio-control--mute {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.audio-hint {
+  flex: 1 1 100%;
+  margin: 0 0 0 110px;
+  font-size: 15px;
+  line-height: 1.35;
+  color: rgba(216, 255, 216, 0.72);
+  font-family: 'Indie Flower', cursive;
+}
+
+.volume-control--full {
+  flex: 1;
+  min-width: 0;
+}
+
 .audio-label {
   font-size: 20px;
   font-weight: bold;
@@ -311,6 +330,7 @@
   .audio-control   { flex-wrap: wrap; gap: 12px; }
   .audio-label     { width: 100%; min-width: auto; }
   .volume-control  { width: 100%; flex: none; }
+  .audio-hint      { margin-left: 0; }
   .action-buttons  { flex-direction: column; gap: 12px; }
   .action-btn      { width: 100%; min-width: auto; font-size: 18px; padding: 12px 30px; }
 }

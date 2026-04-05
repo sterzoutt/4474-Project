@@ -1,42 +1,45 @@
 import { useState } from 'react'
 import './OptionsScreen.css'
+import { useGameAudio } from './audio/GameAudioProvider.jsx'
+import {
+  getDefaultGameSettings,
+  loadGameSettings,
+  saveGameSettings,
+} from './audio/audioSettings'
 
 function OptionsScreen({ onBack }) {
-  const loadSettings = () => {
-    const saved = localStorage.getItem('gameSettings')
-    if (saved) return JSON.parse(saved)
-    return {
-      difficulty: 'Normal',
-      soundEnabled: true,
-      musicEnabled: true,
-      soundVolume: 80,
-      musicVolume: 80,
-    }
+  const { playUiClick } = useGameAudio()
+
+  const [tempSettings, setTempSettings] = useState(() => loadGameSettings())
+
+  const handleDifficultyChange = (difficulty) => {
+    playUiClick()
+    setTempSettings({ ...tempSettings, difficulty })
   }
 
-  const [settings,     setSettings]     = useState(loadSettings)
-  const [tempSettings, setTempSettings] = useState(loadSettings)
+  const handleMuteToggle = () => {
+    playUiClick()
+    setTempSettings({ ...tempSettings, audioMuted: !tempSettings.audioMuted })
+  }
 
-  const handleDifficultyChange  = (difficulty) => setTempSettings({ ...tempSettings, difficulty })
-  const handleSoundToggle       = () => setTempSettings({ ...tempSettings, soundEnabled: !tempSettings.soundEnabled })
-  const handleMusicToggle       = () => setTempSettings({ ...tempSettings, musicEnabled: !tempSettings.musicEnabled })
-  const handleSoundVolumeChange = (e) => setTempSettings({ ...tempSettings, soundVolume: parseInt(e.target.value) })
-  const handleMusicVolumeChange = (e) => setTempSettings({ ...tempSettings, musicVolume: parseInt(e.target.value) })
+  const handleSfxVolumeChange = (e) => {
+    setTempSettings({ ...tempSettings, sfxVolume: parseInt(e.target.value, 10) })
+  }
+
+  const handleMusicVolumeChange = (e) => {
+    setTempSettings({ ...tempSettings, musicVolume: parseInt(e.target.value, 10) })
+  }
 
   const handleSave = () => {
-    localStorage.setItem('gameSettings', JSON.stringify(tempSettings))
-    setSettings(tempSettings)
+    playUiClick()
+    saveGameSettings(tempSettings)
     alert('Settings saved!')
   }
 
   const handleReset = () => {
-    setTempSettings({
-      difficulty: 'Normal',
-      soundEnabled: true,
-      musicEnabled: true,
-      soundVolume: 80,
-      musicVolume: 80,
-    })
+    playUiClick()
+    const d = getDefaultGameSettings()
+    setTempSettings(d)
   }
 
   return (
@@ -75,51 +78,58 @@ function OptionsScreen({ onBack }) {
         <div className="settings-section">
           <h2 className="section-title">Audio</h2>
 
-          {/* Sound */}
-          <div className="audio-control">
-            <label className="audio-label">Sound</label>
+          <div className="audio-control audio-control--mute">
+            <label className="audio-label" htmlFor="mute-all-toggle">
+              Mute all
+            </label>
             <button
-              className={`toggle-btn ${tempSettings.soundEnabled ? 'on' : 'off'}`}
-              onClick={handleSoundToggle}
+              id="mute-all-toggle"
+              type="button"
+              className={`toggle-btn ${tempSettings.audioMuted ? 'off' : 'on'}`}
+              onClick={handleMuteToggle}
+              aria-pressed={tempSettings.audioMuted}
             >
-              <span className="toggle-off">OFF</span>
+              <span className="toggle-off">MUTED</span>
               <span className="toggle-on">ON</span>
             </button>
-            <div className="volume-control">
+            <p className="audio-hint">
+              Sliders keep your levels; mute silences music and sound effects until you turn it back on.
+            </p>
+          </div>
+
+          <div className="audio-control">
+            <label className="audio-label" htmlFor="sfx-volume">
+              SFX
+            </label>
+            <div className="volume-control volume-control--full">
               <span className="volume-icon">🔊</span>
               <input
+                id="sfx-volume"
                 type="range"
                 min="0"
                 max="100"
-                value={tempSettings.soundVolume}
-                onChange={handleSoundVolumeChange}
+                value={tempSettings.sfxVolume}
+                onChange={handleSfxVolumeChange}
                 className="volume-slider"
-                disabled={!tempSettings.soundEnabled}
               />
-              <span className="volume-value">{tempSettings.soundVolume}</span>
+              <span className="volume-value">{tempSettings.sfxVolume}</span>
             </div>
           </div>
 
-          {/* Music */}
           <div className="audio-control">
-            <label className="audio-label">Music</label>
-            <button
-              className={`toggle-btn ${tempSettings.musicEnabled ? 'on' : 'off'}`}
-              onClick={handleMusicToggle}
-            >
-              <span className="toggle-off">OFF</span>
-              <span className="toggle-on">ON</span>
-            </button>
-            <div className="volume-control">
+            <label className="audio-label" htmlFor="music-volume">
+              Music
+            </label>
+            <div className="volume-control volume-control--full">
               <span className="volume-icon">🎵</span>
               <input
+                id="music-volume"
                 type="range"
                 min="0"
                 max="100"
                 value={tempSettings.musicVolume}
                 onChange={handleMusicVolumeChange}
                 className="volume-slider"
-                disabled={!tempSettings.musicEnabled}
               />
               <span className="volume-value">{tempSettings.musicVolume}</span>
             </div>
@@ -128,8 +138,12 @@ function OptionsScreen({ onBack }) {
 
         {/* Action buttons */}
         <div className="action-buttons">
-          <button className="action-btn save-btn" onClick={handleSave}>Save</button>
-          <button className="action-btn reset-btn" onClick={handleReset}>Reset</button>
+          <button className="action-btn save-btn" onClick={handleSave}>
+            Save
+          </button>
+          <button className="action-btn reset-btn" onClick={handleReset}>
+            Reset
+          </button>
         </div>
       </div>
     </div>
