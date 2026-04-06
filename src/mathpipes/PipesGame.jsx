@@ -666,6 +666,15 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
     setHintPipeIdx(null); setHintStep(0); setWrongMsg('')
   }, [gameState, transPhase, puzzle, mode])
 
+  const handleUndo = useCallback(() => {
+    if (!isActive) return
+    const lastFilledIdx = slots.map((s, i) => (s ? i : -1)).reduce((last, i) => (i > last ? i : last), -1)
+    if (lastFilledIdx < 0) return
+    const next = [...slots]
+    next[lastFilledIdx] = null
+    setSlots(next)
+  }, [isActive, slots])
+
   const handleHint = useCallback(() => {
     if (!isActive) return
     const sol  = puzzle._solution
@@ -684,6 +693,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   // Beginners are not impacted; experienced players get faster paths.
   //
   //   R           → reset current puzzle
+  //   U           → undo last placed pipe
   //   H           → hint
   //   Enter/Space → open valve (when valve is ready)
   //   1–9         → select the nth available (non-used) tray pipe
@@ -712,6 +722,12 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
       if (key === kb.reset) {
         e.preventDefault()
         handleReset()
+        return
+      }
+
+      if (key.toLowerCase() === 'u') {
+        e.preventDefault()
+        handleUndo()
         return
       }
 
@@ -765,7 +781,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   }, [
     isActive, allFilled, selIdx, slots, usedIdx, puzzle.pipes, sortedTrayIdx,
     showHelp, showEscConfirm,
-    handleReset, handleHint, handleValve, handleSlotClick, handleTrayClick,
+    handleReset, handleUndo, handleHint, handleValve, handleSlotClick, handleTrayClick,
   ])
 
   // ── Efficiency of use: auto-place when pipe is selected ──────────────────
@@ -1222,24 +1238,40 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
         {/* ── Pipes Bar (bottom toolbar) ── */}
         <div className="pipes-bar">
           <div className="pipes-bar__header">
-            <span className="pipes-bar__label">{puzzle.pipes.length - usedIdx.length} pipes left</span>
-            <div className="pipes-bar__actions">
-              {/* Efficiency of use: keyboard shortcut badges shown next to each button.
-                  Subtle enough not to clutter, useful for returning players. */}
+            <div className="pipes-bar__actions pipes-bar__actions--left">
               <button
                 type="button"
-                className="pipe-chip pipe-chip--action"
-                onClick={handleReset}
-                disabled={gameState !== 'playing' || transPhase !== null}
-                title="Reset puzzle [R]"
-              >&#8635; RESET<kbd className="kbd-hint">R</kbd></button>
-              <button
-                type="button"
-                className="pipe-chip pipe-chip--action"
+                className="pipe-chip pipe-chip--action pipe-chip--hint"
                 onClick={handleHint}
                 disabled={!isActive}
                 title="Hint [H]"
               >? HINT<kbd className="kbd-hint">H</kbd></button>
+              {/* Progressive disclosure: "How it works" — reveals full explanation on demand */}
+              <button
+                type="button"
+                className="pipe-chip pipe-chip--action pipe-chip--how"
+                onClick={() => setShowHelp(true)}
+                title="How to play"
+              >&#9432; HOW</button>
+            </div>
+            <span className="pipes-bar__label">{puzzle.pipes.length - usedIdx.length} pipes left</span>
+            <div className="pipes-bar__actions pipes-bar__actions--right">
+              {/* Efficiency of use: keyboard shortcut badges shown next to each button.
+                  Subtle enough not to clutter, useful for returning players. */}
+              <button
+                type="button"
+                className="pipe-chip pipe-chip--action pipe-chip--undo"
+                onClick={handleUndo}
+                disabled={!isActive || slots.every((s) => s === null)}
+                title="Undo last pipe [U]"
+              >&#8630; UNDO<kbd className="kbd-hint">U</kbd></button>
+              <button
+                type="button"
+                className="pipe-chip pipe-chip--action pipe-chip--redo"
+                onClick={handleReset}
+                disabled={gameState !== 'playing' || transPhase !== null}
+                title="Redo puzzle [R]"
+              >&#8635; REDO<kbd className="kbd-hint">R</kbd></button>
               <button
                 type="button"
                 className={validateBtnCls}
@@ -1248,13 +1280,6 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                 title={allFilled ? 'Validate answer [Enter]' : 'Fill all slots first'}
                 aria-label="Validate answer"
               >&#10003; VALIDATE<kbd className="kbd-hint">↵</kbd></button>
-              {/* Progressive disclosure: "How it works" — reveals full explanation on demand */}
-              <button
-                type="button"
-                className="pipe-chip pipe-chip--action pipe-chip--how"
-                onClick={() => setShowHelp(true)}
-                title="How to play"
-              >&#9432; HOW</button>
             </div>
           </div>
           <div className="pipes-list">
