@@ -44,9 +44,12 @@ const CONN_X = { left: 50, right: 450 }
 
 function PipeSVG({ variant, value, kind, isFlowing, flowDelay }) {
   const d = PIPE_D[variant]
+  // All pipes use the same grey structural gradient so the path reads as one
+  // continuous system.  Start/end pipes get a slightly lighter variant so the
+  // fixed values still stand out without breaking the grey colour scheme.
   const grad =
     kind === 'start' || kind === 'end'
-      ? 'url(#pb-gFixed)'
+      ? 'url(#pb-gFixedGrey)'
       : 'url(#pb-gPipe)'
 
   return (
@@ -975,11 +978,14 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                       <stop offset="60%"  stopColor="#888" />
                       <stop offset="100%" stopColor="#555" />
                     </linearGradient>
-                    <linearGradient id="pb-gFixed" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="#ffe680" />
-                      <stop offset="30%"  stopColor="#ffd700" />
-                      <stop offset="60%"  stopColor="#daa520" />
-                      <stop offset="100%" stopColor="#b8860b" />
+                    {/* Grey gradient for fixed start/end pipes — slightly lighter
+                        than player pipes so the equation endpoints are readable
+                        but the path looks like one continuous grey pipe system. */}
+                    <linearGradient id="pb-gFixedGrey" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#e8e8e8" />
+                      <stop offset="30%"  stopColor="#c8c8c8" />
+                      <stop offset="60%"  stopColor="#a0a0a0" />
+                      <stop offset="100%" stopColor="#707070" />
                     </linearGradient>
                     <linearGradient id="pb-gShine" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%"   stopColor="white" stopOpacity="0.5" />
@@ -996,9 +1002,8 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                   </defs>
                 </svg>
 
-                {/* Start pipe (fixed) — water flow begins here */}
+                {/* Top fixed pipe — equation starting value */}
                 <div className={`pb-row pb-row--fixed${flowing ? ' pb-row--water' : ''}`}>
-                  <span className="pb-tag pb-tag--start">START</span>
                   <PipeSVG variant="right-up" value={puzzle.start} kind="start"
                     isFlowing={flowing} flowDelay="0ms" />
                 </div>
@@ -1076,13 +1081,12 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                   flowDelay={`${0.7 + (nSlots - 1) * 0.45}s`}
                 />
 
-                {/* End pipe (fixed) — water arrives last */}
+                {/* Bottom fixed pipe — equation target value */}
                 <div className={`pb-row pb-row--fixed${flowing ? ' pb-row--water' : ''}`}>
                   <PipeSVG variant={endVariant} value={puzzle.target} kind="end"
                     isFlowing={flowing}
                     flowDelay={`${0.45 + nSlots * 0.45}s`}
                   />
-                  <span className="pb-tag pb-tag--end">TARGET</span>
                 </div>
               </div>
 
