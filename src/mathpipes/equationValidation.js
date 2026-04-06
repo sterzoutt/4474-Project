@@ -78,6 +78,18 @@ export function canReachTarget(puzzle, slotsState, operators, mode) {
   if (available.length < emptyIdx.length) return false
 
   if (emptyIdx.length === 0) {
+    if (mode === 'mixed') {
+      for (let mask = 0; mask < 1 << slotCount; mask++) {
+        const testOps = Array.from({ length: slotCount }, (_, j) =>
+          (mask >> j) & 1 ? '-' : '+'
+        )
+        if (
+          prefixWithinRuler(puzzle.start, slotVals, testOps) &&
+          evaluate(puzzle.start, slotVals, testOps) === puzzle.target
+        ) return true
+      }
+      return false
+    }
     if (!prefixWithinRuler(puzzle.start, slotVals, operators)) return false
     return evaluate(puzzle.start, slotVals, operators) === puzzle.target
   }
@@ -91,12 +103,10 @@ export function canReachTarget(puzzle, slotsState, operators, mode) {
     })
 
     if (mode === 'mixed') {
-      const k = emptyIdx.length
-      for (let mask = 0; mask < 1 << k; mask++) {
-        const testOps = [...operators]
-        emptyIdx.forEach((ei, bit) => {
-          testOps[ei] = (mask >> bit) & 1 ? '-' : '+'
-        })
+      for (let mask = 0; mask < 1 << slotCount; mask++) {
+        const testOps = Array.from({ length: slotCount }, (_, j) =>
+          (mask >> j) & 1 ? '-' : '+'
+        )
         if (
           prefixWithinRuler(puzzle.start, testVals, testOps) &&
           evaluate(puzzle.start, testVals, testOps) === puzzle.target
@@ -124,7 +134,7 @@ export function validatePlacement(puzzle, slotsState, operators, mode, slotIndex
   next[slotIndex] = { pipeIdx, value: puzzle.pipes[pipeIdx] }
   const slotVals = next.map((s) => (s ? s.value : null))
 
-  if (!prefixWithinRuler(puzzle.start, slotVals, operators)) {
+  if (mode !== 'mixed' && !prefixWithinRuler(puzzle.start, slotVals, operators)) {
     return { ok: false, reason: 'ruler' }
   }
   if (!canReachTarget(puzzle, next, operators, mode)) {

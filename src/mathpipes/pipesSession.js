@@ -15,6 +15,13 @@ function defaultOps(count, mode) {
   return Array(count).fill(mode === 'subtraction' ? '-' : '+')
 }
 
+function puzzleOps(puzzle, mode) {
+  if (Array.isArray(puzzle.defaultOperators) && puzzle.defaultOperators.length === puzzle.slotCount) {
+    return [...puzzle.defaultOperators]
+  }
+  return defaultOps(puzzle.slotCount, mode)
+}
+
 /** Read the tier saved on a session, or fall back to current settings. */
 function resolveTier(session) {
   if (session && VALID_TIERS.has(session.puzzleTier)) return session.puzzleTier
@@ -95,7 +102,7 @@ export function buildInitialMountState(mode, initialSession) {
       sessionDone: false,
       transPhase: null,
       slots: Array(puzzle.slotCount).fill(null),
-      operators: defaultOps(puzzle.slotCount, mode),
+      operators: puzzleOps(puzzle, mode),
       selIdx: null,
       gameState: 'playing',
       valveState: 'locked',
@@ -118,7 +125,7 @@ export function buildInitialMountState(mode, initialSession) {
 
   let operators = initialSession.operators
   if (!Array.isArray(operators) || operators.length !== puzzle.slotCount) {
-    operators = defaultOps(puzzle.slotCount, mode)
+    operators = puzzleOps(puzzle, mode)
   } else {
     operators = operators.map((op) => (op === '-' ? '-' : '+'))
   }
