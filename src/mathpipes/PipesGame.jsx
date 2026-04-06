@@ -901,23 +901,11 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
     transPhase === 'enter' ? 'pg-trans-enter' : '',
   ].filter(Boolean).join(' ')
 
-  const valveWidgetCls = [
-    'valve-widget',
-    valveState === 'ready'  ? 'valve-widget--ready'  : '',
-    valveState === 'open'   ? 'valve-widget--open'    : '',
-    valveState === 'failed' ? 'valve-widget--failed'  : '',
-  ].filter(Boolean).join(' ')
-
   const panelCls = [
     'puzzle-panel',
     transPhase === 'exit'  ? 'puzzle-panel--exit'  : '',
     transPhase === 'enter' ? 'puzzle-panel--enter' : '',
   ].filter(Boolean).join(' ')
-
-  const valveStatusText =
-    valveState === 'ready'  ? 'READY'  :
-    valveState === 'open'   ? 'OPEN'   :
-    valveState === 'failed' ? 'WRONG'  : 'LOCKED'
 
   const validateBtnCls = [
     'pipe-chip',
@@ -1015,29 +1003,8 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
           <span className="pg-target-ribbon__num">{puzzle.target}</span>
         </div>
 
-        {/* ── Main Body (valve + puzzle) ── */}
+        {/* ── Main Body (puzzle) ── */}
         <div className="game-body">
-
-          {/* Validate Sidebar */}
-          <div className="valve-sidebar">
-            <span className="valve-label">VALIDATE</span>
-            <div
-              className={valveWidgetCls}
-              onClick={handleValve}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  handleValve()
-                }
-              }}
-              role="button"
-              tabIndex={isActive ? 0 : -1}
-              aria-disabled={!isActive}
-              aria-label="Validate answer"
-            />
-            <div className="valve-pipe" />
-            <span className="valve-status">{valveStatusText}</span>
-          </div>
 
           {/* Puzzle Panel */}
           <div className={panelCls}>
