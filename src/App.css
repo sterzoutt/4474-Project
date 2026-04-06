@@ -151,6 +151,14 @@ body {
   align-items: center;
 }
 
+.menu-tagline {
+  font-family: 'Indie Flower', cursive;
+  font-size: 1.05rem;
+  color: rgba(216, 255, 216, 0.55);
+  margin: -0.75rem 0 0.25rem;
+  text-align: center;
+}
+
 .home-screen .menu-btn {
   width: 280px;
   padding: 1rem 1.5rem;
@@ -158,6 +166,7 @@ body {
   border-radius: 14px;
   background: linear-gradient(180deg, #4ea64e 0%, #2f7d32 100%);
   color: #f3fff3;
+  font-family: 'Indie Flower', cursive;
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -173,6 +182,34 @@ body {
 
 .home-screen .menu-btn:active {
   transform: translateY(0);
+}
+
+/* Secondary menu buttons (How to Play, Options) — visually lighter than PLAY */
+.home-screen .menu-btn--secondary {
+  background: linear-gradient(180deg, rgba(60, 100, 65, 0.7) 0%, rgba(30, 60, 35, 0.8) 100%);
+  border-color: rgba(123, 207, 118, 0.5);
+  font-size: 1.15rem;
+  color: rgba(210, 255, 210, 0.9);
+}
+
+.home-screen .menu-btn--secondary:hover {
+  background: linear-gradient(180deg, rgba(78, 130, 82, 0.85) 0%, rgba(42, 80, 46, 0.9) 100%);
+  border-color: #7bcf76;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Quit button — subdued so it doesn't compete with primary actions */
+.home-screen .menu-btn--quit {
+  background: linear-gradient(180deg, rgba(80, 40, 40, 0.7) 0%, rgba(50, 20, 20, 0.8) 100%);
+  border-color: rgba(200, 100, 100, 0.45);
+  font-size: 1.1rem;
+  color: rgba(255, 200, 200, 0.8);
+}
+
+.home-screen .menu-btn--quit:hover {
+  background: linear-gradient(180deg, rgba(110, 50, 50, 0.85) 0%, rgba(70, 25, 25, 0.9) 100%);
+  border-color: rgba(220, 120, 120, 0.7);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
 .tile.empty {

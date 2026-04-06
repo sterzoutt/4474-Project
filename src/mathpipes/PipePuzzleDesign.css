@@ -937,6 +937,22 @@ button.pipe-chip--action:nth-of-type(3).pipe-chip--selected {
   animation: chalkGlow 1s ease-in-out infinite;
 }
 
+/* ── "? HOW" button — progressive disclosure trigger ───────────────────────
+   Intentionally muted so it doesn't compete with the primary action buttons,
+   but still visually distinct as an informational affordance.               */
+.pipe-chip--how {
+  background: #000 !important;
+  color: rgba(160, 200, 255, 0.85) !important;
+  border-color: rgba(100, 160, 240, 0.5) !important;
+  font-size: 13px !important;
+  letter-spacing: 0.04em;
+}
+.pipe-chip--how:hover:not(:disabled) {
+  color: #a0c8ff !important;
+  border-color: rgba(100, 160, 240, 0.85) !important;
+  box-shadow: 0 4px 12px rgba(100, 160, 240, 0.25) !important;
+}
+
 /* ============================================================
    GOAL FOOTER
    ============================================================ */

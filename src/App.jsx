@@ -4,6 +4,7 @@ import { useGameAudio } from './audio/GameAudioProvider.jsx'
 import OptionsScreen from './OptionsScreen'
 import ModeSelectScreen from './ModeSelectScreen'
 import PipesGame from './mathpipes/PipesGame'
+import HowToPlayModal from './components/HowToPlayModal'
 import {
   loadSession,
   clearSession,
@@ -19,6 +20,9 @@ function App() {
   )
   const [gameBootSession, setGameBootSession] = useState(null)
 
+  // Progressive disclosure: "How to Play" is secondary information — hidden until requested
+  const [showHowToPlay, setShowHowToPlay] = useState(false)
+
   const handlePlay = () => {
     playUiClick()
     setCurrentScreen('modeSelect')
@@ -26,6 +30,10 @@ function App() {
   const handleOptions = () => {
     playUiClick()
     setCurrentScreen('options')
+  }
+  const handleHowToPlay = () => {
+    playUiClick()
+    setShowHowToPlay(true)
   }
   const handleQuit = () => {
     window.close()
@@ -99,11 +107,20 @@ function App() {
     <div className="app home-screen">
       <div className="menu-container">
         <h1 className="game-title">Fitting Pipes</h1>
+
+        <p className="menu-tagline">Build equations with pipes. Open the valve to score.</p>
+
         <div className="menu-buttons">
           <button className="menu-btn" onClick={handlePlay}>PLAY</button>
-          <button className="menu-btn" onClick={handleOptions}>OPTIONS</button>
+
+          {/* Progressive disclosure: HOW TO PLAY reveals the full ruleset only when asked */}
+          <button className="menu-btn menu-btn--secondary" onClick={handleHowToPlay}>
+            HOW TO PLAY
+          </button>
+
+          <button className="menu-btn menu-btn--secondary" onClick={handleOptions}>OPTIONS</button>
           <button
-            className="menu-btn"
+            className="menu-btn menu-btn--quit"
             onClick={() => {
               playUiClick()
               handleQuit()
@@ -113,6 +130,11 @@ function App() {
           </button>
         </div>
       </div>
+
+      {/* Secondary information layer — only rendered when player asks */}
+      {showHowToPlay && (
+        <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+      )}
     </div>
   )
 }

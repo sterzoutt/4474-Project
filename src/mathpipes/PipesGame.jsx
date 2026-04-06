@@ -17,6 +17,8 @@ import './PipesGame.css'
 import './PipePuzzleDesign.css'
 import './PipeBoard.css'
 import { useGameAudio } from '../audio/GameAudioProvider.jsx'
+import HowToPlayModal from '../components/HowToPlayModal'
+import { loadGameSettings } from '../audio/audioSettings.js'
 
 const GAME_LENGTH = 8   // questions per session
 const RULER_MAX   = 20  // fixed 1–20 ruler on both pipes
@@ -336,6 +338,15 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
   const [trayShakeIdx, setTrayShakeIdx] = useState(null)
   const [slotShakeIdx, setSlotShakeIdx] = useState(null)
 
+  // ── Progressive disclosure state ─────────────────────────────────────────
+  // showHelp: opens the How-to-Play modal from inside the game (? button in tray)
+  const [showHelp, setShowHelp] = useState(false)
+  // mistakeCount: increments on rejected placements and failed valve — used to
+  //   surface the instruction tip contextually for Medium/Hard players
+  const [mistakeCount, setMistakeCount] = useState(0)
+  // Read difficulty once per render cycle (no subscription needed — game mounts fresh per session)
+  const difficulty = loadGameSettings().difficulty  // 'Easy' | 'Normal' | 'Hard'
+
   const skipPuzzleResetOnce = useRef(M.skipFirstPuzzleReset)
 
   // Reset everything when the puzzle (question) changes
@@ -353,6 +364,7 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
     setHintStep(0)
     setHintsUsed(0)
     setWrongMsg('')
+    setMistakeCount(0)
   }, [puzzle, mode])
 
   useEffect(() => {
@@ -451,6 +463,9 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
 
   const rejectPlacement = useCallback(
     (trayPipeIdx, slotIdx) => {
+      // Progressive disclosure: count mistakes so Medium/Hard players get the
+      // instruction tip revealed after repeated incorrect attempts
+      setMistakeCount((n) => n + 1)
       setTrayShakeIdx(trayPipeIdx)
       if (slotIdx != null) setSlotShakeIdx(slotIdx)
       playSfx('wrong')
@@ -511,6 +526,7 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
       setScore((s) => s + pts)
       setHintsTotal((h) => h + hintsUsed)
     } else if (allFilled) {
+      setMistakeCount((n) => n + 1)
       playSfx('wrong')
       setValveState('failed')
       const diff = liveResult - puzzle.target
@@ -630,6 +646,20 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
     valveState === 'open'   ? 'OPEN'   :
     valveState === 'failed' ? 'WRONG'  : 'LOCKED'
 
+  // ── Progressive disclosure: what secondary UI to show by default ─────────
+  // Easy   → show instruction tip + eq hint line always (most support)
+  // Normal → show tip only after ≥2 mistakes, hide eq hint by default
+  // Hard   → hide tip and eq hint unless ≥3 mistakes (bare essential task UI)
+  const showSlotTip = isActive && (
+    difficulty === 'Easy' ||
+    (difficulty === 'Normal' && mistakeCount >= 2) ||
+    (difficulty === 'Hard'   && mistakeCount >= 3)
+  )
+  const showEqHintLine = (
+    difficulty === 'Easy' ||
+    (difficulty !== 'Easy' && mistakeCount >= 2)
+  )
+
   return (
     <div className="game-background">
 
@@ -715,8 +745,8 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
             {/* Slot Grid */}
             <div className="slot-grid">
 
-              {/* Tip text */}
-              {isActive && (
+              {/* Progressive disclosure: tip text — shown based on difficulty + mistake count */}
+              {showSlotTip && (
                 <p className="slot-grid__tip">
                   {selIdx !== null
                     ? `Pipe ${puzzle.pipes[selIdx]} selected — place on the highlighted row (or drop there)`
@@ -844,18 +874,21 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
                 {isMatch && <span className="eq-strip__check"> &#10003;</span>}
               </div>
 
-              <p className={`pg-eq-hint${isMatch ? ' pg-eq-hint--match' : ''}`}>
-                {!allFilled && (
-                  <>Running total (left): <strong>{liveResult}</strong></>
-                )}
-                {allFilled && !isMatch && (
-                  <>
-                    Left side = <strong>{liveResult}</strong>, goal = <strong>{puzzle.target}</strong>
-                    <span className="pg-eq-hint__warn"> — adjust pipes or operators</span>
-                  </>
-                )}
-                {isMatch && <span>Left side equals the goal.</span>}
-              </p>
+              {/* Progressive disclosure: running-total detail hidden by default on Normal/Hard */}
+              {showEqHintLine && (
+                <p className={`pg-eq-hint${isMatch ? ' pg-eq-hint--match' : ''}`}>
+                  {!allFilled && (
+                    <>Running total (left): <strong>{liveResult}</strong></>
+                  )}
+                  {allFilled && !isMatch && (
+                    <>
+                      Left side = <strong>{liveResult}</strong>, goal = <strong>{puzzle.target}</strong>
+                      <span className="pg-eq-hint__warn"> — adjust pipes or operators</span>
+                    </>
+                  )}
+                  {isMatch && <span>Left side equals the goal.</span>}
+                </p>
+              )}
 
             </div>{/* end slot-grid */}
 
@@ -893,20 +926,30 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
             <span className="pipes-bar__label">PIPE PIECES &mdash; {puzzle.pipes.length - usedIdx.length} left</span>
             <div className="pipes-bar__actions">
               <button
+                type="button"
                 className="pipe-chip pipe-chip--action"
                 onClick={handleReset}
                 disabled={gameState !== 'playing' || transPhase !== null}
               >&#8635; RESET</button>
               <button
+                type="button"
                 className="pipe-chip pipe-chip--action"
                 onClick={handleHint}
                 disabled={!isActive}
               >? HINT</button>
               <button
+                type="button"
                 className={`pipe-chip${valveState === 'ready' ? ' pipe-chip--selected' : ' pipe-chip--action'}`}
                 onClick={handleValve}
                 disabled={!allFilled || !isActive}
               >&#9881; VALVE</button>
+              {/* Progressive disclosure: "How it works" — reveals full explanation on demand */}
+              <button
+                type="button"
+                className="pipe-chip pipe-chip--action pipe-chip--how"
+                onClick={() => setShowHelp(true)}
+                title="How to play"
+              >&#9432; HOW</button>
             </div>
           </div>
           <div className="pipes-list">
@@ -953,6 +996,11 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
             hintsTotal={hintsTotal}
             onHome={() => { clearSession(); onBack() }}
           />
+        )}
+
+        {/* Progressive disclosure: full How-to-Play opens on demand from the ? HOW button */}
+        {showHelp && (
+          <HowToPlayModal onClose={() => setShowHelp(false)} />
         )}
 
       </div>
