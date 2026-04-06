@@ -734,13 +734,14 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
         return
       }
 
-      // 1–9: select pipe by its FIXED tray position (1 = first pipe overall, not first available).
-      // This means labels stay stable — pipe "4" is always key 4, even if pipes 1–3 are placed.
+      // 1–9: select pipe by its VISUAL tray position (1 = leftmost displayed pipe).
+      // sortedTrayIdx holds the pipe indices in the exact left-to-right render order,
+      // so key 1 always maps to the leftmost pipe regardless of its numeric value.
       const digit = parseInt(key, 10)
       if (!isNaN(digit) && digit >= 1 && digit <= 9) {
         e.preventDefault()
-        const pipeIdx = digit - 1  // direct index into puzzle.pipes array
-        if (pipeIdx < puzzle.pipes.length && !usedIdx.includes(pipeIdx)) {
+        const pipeIdx = sortedTrayIdx[digit - 1]  // display position → actual pipe index
+        if (pipeIdx !== undefined && !usedIdx.includes(pipeIdx)) {
           handleTrayClick(pipeIdx)
         }
         return
@@ -762,7 +763,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [
-    isActive, allFilled, selIdx, slots, usedIdx, puzzle.pipes,
+    isActive, allFilled, selIdx, slots, usedIdx, puzzle.pipes, sortedTrayIdx,
     showHelp, showEscConfirm,
     handleReset, handleHint, handleValve, handleSlotClick, handleTrayClick,
   ])
@@ -1262,48 +1263,46 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
               const first = sortedTrayIdx.slice(0, mid)
               const second = sortedTrayIdx.slice(mid)
 
-              const renderChip = (i) => {
+              // displayPos: 1-based left-to-right visual position — matches keyboard key exactly.
+              const renderChip = (i, displayPos) => {
                 const val = puzzle.pipes[i]
                 const st = trayState(i)
-              const chipCls = [
-                'pipe-chip',
-                st === 'selected' ? 'pipe-chip--selected' : '',
-                st === 'used'     ? 'pipe-chip--used'     : '',
-                st === 'hint'     ? 'pipe-chip--hinted'   : '',
-                trayShakeIdx === i ? 'pipe-chip--shake-error' : '',
-              ].filter(Boolean).join(' ')
+                const chipCls = [
+                  'pipe-chip',
+                  st === 'selected' ? 'pipe-chip--selected' : '',
+                  st === 'used'     ? 'pipe-chip--used'     : '',
+                  st === 'hint'     ? 'pipe-chip--hinted'   : '',
+                  trayShakeIdx === i ? 'pipe-chip--shake-error' : '',
+                ].filter(Boolean).join(' ')
 
-              // Efficiency of use: each pipe's keyboard number is its FIXED tray position (i+1).
-              // The number never changes when other pipes are placed — pipe "4" is always "4".
-              // Only show badge if within 1–9 range and the pipe is still available.
-              const kbdNum = i < 9 ? i + 1 : null
+                // kbdNum matches the visual position (key 1 = leftmost pipe, key 4 = rightmost).
+                const kbdNum = displayPos <= 9 ? displayPos : null
 
-              return (
-                <button
-                  key={i}
-                  className={chipCls}
-                  onClick={() => handleTrayClick(i)}
-                  draggable={st !== 'used' && isActive}
-                  onDragStart={() => handleDragStart(i)}
-                  onDragEnd={handleDragEnd}
-                  disabled={st === 'used'}
-                  aria-label={`Pipe ${val}${kbdNum ? ` — key ${kbdNum}` : ''}`}
-                  title={kbdNum && st !== 'used' ? `Pipe ${val} — press ${kbdNum}` : `Pipe ${val}`}
-                >
-                  <span className="pipe-chip__body">{val}</span>
-                  {/* Fixed position badge: always matches key number, never re-labels when others are used */}
-                  {kbdNum && st !== 'used' && (
-                    <kbd className="kbd-hint kbd-hint--pipe">{kbdNum}</kbd>
-                  )}
-                </button>
-              )
+                return (
+                  <button
+                    key={i}
+                    className={chipCls}
+                    onClick={() => handleTrayClick(i)}
+                    draggable={st !== 'used' && isActive}
+                    onDragStart={() => handleDragStart(i)}
+                    onDragEnd={handleDragEnd}
+                    disabled={st === 'used'}
+                    aria-label={`Pipe ${val}${kbdNum ? ` — key ${kbdNum}` : ''}`}
+                    title={kbdNum && st !== 'used' ? `Pipe ${val} — press ${kbdNum}` : `Pipe ${val}`}
+                  >
+                    <span className="pipe-chip__body">{val}</span>
+                    {kbdNum && st !== 'used' && (
+                      <kbd className="kbd-hint kbd-hint--pipe">{kbdNum}</kbd>
+                    )}
+                  </button>
+                )
               }
 
               return (
                 <>
-                  {first.map(renderChip)}
+                  {first.map((i, j) => renderChip(i, j + 1))}
                   <div className="pipes-list__divider" aria-hidden="true" />
-                  {second.map(renderChip)}
+                  {second.map((i, j) => renderChip(i, mid + j + 1))}
                 </>
               )
             })()}
