@@ -12,11 +12,10 @@ const MODE_LABEL = {
 }
 
 export default function ModeSelectScreen({ onBack, onEnterGame }) {
-  const snapshot = loadSession()
+  const snapshot    = loadSession()
   const canContinue = isSessionLoadable()
-  const saved = canContinue && snapshot ? snapshot : null
 
-  const hasRawSave = snapshot != null && snapshot.v === 1
+  const saved = canContinue && snapshot ? snapshot : null
 
   return (
     <div className="app home-screen mode-select-screen">
@@ -26,10 +25,10 @@ export default function ModeSelectScreen({ onBack, onEnterGame }) {
       <div className="menu-container mode-select-inner">
         <h1 className="game-title mode-select-title">Before you play</h1>
         <p className="mode-select-hint">
-          Pick a math type. Your run is saved automatically — continue anytime, or start a new game
-          (that replaces the save).
+          Pick a math type. Your run is saved automatically — continue anytime, or start a new game (that replaces the save).
         </p>
 
+        {/* ── In-progress save ── */}
         <section className="mode-select-save-section" aria-label="Saved progress">
           <h2 className="mode-select-section-title">Current save</h2>
           {saved ? (
@@ -45,16 +44,12 @@ export default function ModeSelectScreen({ onBack, onEnterGame }) {
                 </span>
               </div>
               <div className="mode-select-save-row">
-                <span className="mode-select-save-label">Score</span>
+                <span className="mode-select-save-label">Score so far</span>
                 <span className="mode-select-save-val">
                   {typeof saved.score === 'number' ? saved.score : 0} pts
                 </span>
               </div>
             </div>
-          ) : hasRawSave && !canContinue ? (
-            <p className="mode-select-save-empty">
-              A save file is present but could not be loaded. Start a new game below to replace it.
-            </p>
           ) : (
             <p className="mode-select-save-empty">
               No saved game yet. Play once to create a save — it updates as you go.
@@ -62,6 +57,7 @@ export default function ModeSelectScreen({ onBack, onEnterGame }) {
           )}
         </section>
 
+        {/* ── Continue button — only for in-progress sessions ── */}
         {saved && (
           <button
             type="button"

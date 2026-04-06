@@ -645,8 +645,11 @@
   to   { box-shadow: 0 5px 22px rgba(78,166,78,0.82); }
 }
 
-.pg-btn-home { background: linear-gradient(180deg, #ffa726, #e65100); border-color: #ffcc80; }
-.pg-btn-home:hover:not(:disabled) { background: linear-gradient(180deg, #ffb74d, #f57c00); }
+.pg-btn-play-again { background: linear-gradient(180deg, #4ea64e, #2f7d32); border-color: #7bcf76; }
+.pg-btn-play-again:hover:not(:disabled) { background: linear-gradient(180deg, #63b963, #3c9141); }
+
+.pg-btn-home { background: linear-gradient(180deg, #546e7a, #263238); border-color: #90a4ae; }
+.pg-btn-home:hover:not(:disabled) { background: linear-gradient(180deg, #607d8b, #37474f); }
 
 /* ============================================================
    PIPE TRAY

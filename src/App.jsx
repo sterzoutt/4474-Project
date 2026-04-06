@@ -93,6 +93,13 @@ function App() {
           setCurrentScreen('menu')
           setGameBootSession(null)
         }}
+        onPlayAgain={() => {
+          // Session is already cleared by EndScreen before this is called.
+          // Go directly to mode select so the player can pick a new game.
+          playUiClick()
+          setGameBootSession(null)
+          setCurrentScreen('modeSelect')
+        }}
         onAbandon={() => {
           playUiClick()
           clearSession()

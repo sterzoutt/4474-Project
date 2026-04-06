@@ -271,7 +271,7 @@ function VConn({ flowing, delay }) {
 }
 
 // ── Session-end overlay ───────────────────────────────────────────────────────
-function EndScreen({ score, hintsTotal, onHome }) {
+function EndScreen({ score, hintsTotal, onHome, onPlayAgain }) {
   return (
     <div className="pg-end-overlay">
       <div className="pg-end-card">
@@ -288,8 +288,12 @@ function EndScreen({ score, hintsTotal, onHome }) {
             <span className="pg-end-stat-l">Hints Used</span>
           </div>
         </div>
+        {/* Play Again goes straight to mode select so user can pick a new game immediately */}
+        <button className="pg-btn pg-btn-play-again" onClick={onPlayAgain}>
+          ↺ Play Again
+        </button>
         <button className="pg-btn pg-btn-home" onClick={onHome}>
-          ← Back to Menu
+          ← Main Menu
         </button>
       </div>
     </div>
@@ -297,7 +301,7 @@ function EndScreen({ score, hintsTotal, onHome }) {
 }
 
 // ── Main game ─────────────────────────────────────────────────────────────────
-function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
+function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon }) {
   const { playSfx } = useGameAudio()
   const mountStateRef = useRef(null)
   if (mountStateRef.current === null) {
@@ -373,6 +377,10 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
   }, [puzzle, mode])
 
   useEffect(() => {
+    if (sessionDone) {
+      clearSession()
+      return
+    }
     saveSession(
       packSessionForStorage(mode, {
         questionNum,
@@ -1096,6 +1104,7 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
           <EndScreen
             score={score}
             hintsTotal={hintsTotal}
+            onPlayAgain={() => { clearSession(); onPlayAgain() }}
             onHome={() => { clearSession(); onBack() }}
           />
         )}

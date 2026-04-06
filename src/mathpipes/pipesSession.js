@@ -42,10 +42,21 @@ export function packSessionForStorage(mode, fields) {
   return { v: VERSION, mode, ...fields }
 }
 
+/** True if a completed (sessionDone) save exists — used by the mode select screen. */
+export function isSessionDone() {
+  const s = loadSession()
+  return !!(s && s.v === VERSION && s.sessionDone === true)
+}
+
+/**
+ * True only if there is an IN-PROGRESS session that can be resumed.
+ * Completed sessions (sessionDone: true) return false — they cannot be continued.
+ */
 export function isSessionLoadable() {
   const s = loadSession()
   if (!s || s.v !== VERSION) return false
   if (!['addition', 'subtraction', 'mixed'].includes(s.mode)) return false
+  if (s.sessionDone) return false   // finished games cannot be "continued"
   const qn = Math.min(Math.max(1, Number(s.questionNum) || 1), Q_MAX)
   const puzzle = getPuzzle('mini', s.mode, qn - 1)
   if (!Array.isArray(s.slots) || s.slots.length !== puzzle.slotCount) return false
