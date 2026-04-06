@@ -19,6 +19,12 @@ import { useGameAudio } from '../audio/GameAudioProvider.jsx'
 import HowToPlayModal from '../components/HowToPlayModal'
 import { loadGameSettings } from '../audio/audioSettings.js'
 import { loadKeyBindings } from '../audio/keyBindings.js'
+import {
+  loadProfile,
+  recordPuzzleSolved,
+  recordSessionComplete,
+  getExpertiseTier,
+} from '../audio/playerProfile.js'
 
 const GAME_LENGTH = 8   // questions per session
 const RULER_MAX   = 20  // fixed 1–20 ruler on both pipes
@@ -36,7 +42,7 @@ const PIPE_D = {
 
 const CONN_X = { left: 50, right: 450 }
 
-function PipeSVG({ variant, value, kind }) {
+function PipeSVG({ variant, value, kind, isFlowing, flowDelay }) {
   const d = PIPE_D[variant]
   const grad =
     kind === 'start' || kind === 'end'
@@ -53,6 +59,15 @@ function PipeSVG({ variant, value, kind }) {
         d={d} fill="none" stroke={grad}
         strokeWidth="18" strokeLinecap="round" strokeLinejoin="round"
       />
+      {/* Water-flow overlay: animated stroke-dashoffset draws water along the pipe path */}
+      {isFlowing && (
+        <path
+          d={d} fill="none" stroke="url(#pb-gWater)"
+          strokeWidth="12" strokeLinecap="round" strokeLinejoin="round"
+          className="pb-water-path"
+          style={flowDelay ? { animationDelay: flowDelay } : undefined}
+        />
+      )}
       <path
         d={d} fill="none" stroke="url(#pb-gShine)"
         strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"
@@ -94,7 +109,7 @@ function EmptySlotSVG({ expectedSide }) {
   )
 }
 
-function PBConnector({ side }) {
+function PBConnector({ side, isFlowing, flowDelay }) {
   if (!side) return <div className="pb-gap" />
   const x = CONN_X[side]
   return (
@@ -103,6 +118,14 @@ function PBConnector({ side }) {
         x1={x} y1="0" x2={x} y2="10"
         stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinecap="round"
       />
+      {isFlowing && (
+        <line
+          x1={x} y1="0" x2={x} y2="10"
+          stroke="url(#pb-gWater)" strokeWidth="8" strokeLinecap="round"
+          className="pb-water-conn"
+          style={flowDelay ? { animationDelay: flowDelay } : undefined}
+        />
+      )}
     </svg>
   )
 }
@@ -350,10 +373,29 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   // showHelp: opens the How-to-Play modal from inside the game (? button in tray)
   const [showHelp, setShowHelp] = useState(false)
   // mistakeCount: increments on rejected placements and failed valve — used to
-  //   surface the instruction tip contextually for Medium/Hard players
+  //   surface the instruction tip contextually per adaptive tier
   const [mistakeCount, setMistakeCount] = useState(0)
   // Read difficulty once per render cycle (no subscription needed — game mounts fresh per session)
   const difficulty = loadGameSettings().difficulty  // 'Easy' | 'Normal' | 'Hard'
+
+  // ── Adaptive progressive disclosure ──────────────────────────────────────
+  // Player profile loaded once on mount; never changes mid-session.
+  // We use a ref so it doesn't trigger re-renders.
+  const profileRef = useRef(null)
+  if (profileRef.current === null) profileRef.current = loadProfile()
+
+  // hintsUsedRef: always mirrors hintsUsed state so the transPhase-exit effect
+  // can safely read it (async effects close over stale state values).
+  const hintsUsedRef = useRef(hintsUsed)
+  hintsUsedRef.current = hintsUsed
+
+  // sessionMistakesRef: accumulated mistakes across all puzzles this session.
+  // Used to detect sustained struggling (distinct from per-puzzle mistakeCount).
+  const sessionMistakesRef = useRef(0)
+
+  // cleanSolvesThisSession: consecutive puzzles solved without any hints.
+  // Resets to 0 the moment any hint is used on a puzzle.
+  const [cleanSolvesThisSession, setCleanSolvesThisSession] = useState(0)
 
   // ── Efficiency of use: Esc-to-back confirmation ───────────────────────────
   // Prevents accidental exits from a fast Esc press, while still allowing
@@ -460,6 +502,17 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   // Use two separate effects (one per phase) to avoid that race condition.
   useEffect(() => {
     if (transPhase !== 'exit') return
+
+    // ── Record puzzle result for adaptive disclosure ──────────────────────
+    // hintsUsedRef holds the hint count for the puzzle just solved (before
+    // the reset effect fires when questionNum advances).
+    const puzzleHints = hintsUsedRef.current
+    recordPuzzleSolved({ hintsUsed: puzzleHints })
+
+    // Update consecutive-clean-solve streak:
+    // increment if no hints were used, reset if any were.
+    setCleanSolvesThisSession((c) => (puzzleHints === 0 ? c + 1 : 0))
+
     const t = setTimeout(() => {
       if (qRef.current >= GAME_LENGTH) {
         setSessionDone(true)
@@ -472,6 +525,14 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
     return () => clearTimeout(t)
   }, [transPhase])
 
+  // ── Record session completion for adaptive disclosure ─────────────────────
+  // Fires once when sessionDone becomes true. Increments the lifetime session
+  // counter so the player's base tier can advance on the next game.
+  useEffect(() => {
+    if (!sessionDone) return
+    recordSessionComplete()
+  }, [sessionDone])
+
   // ── Transition: enter → clear, making the next puzzle fully interactive ──
   useEffect(() => {
     if (transPhase !== 'enter') return
@@ -481,9 +542,9 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
 
   const rejectPlacement = useCallback(
     (trayPipeIdx, slotIdx) => {
-      // Progressive disclosure: count mistakes so Medium/Hard players get the
-      // instruction tip revealed after repeated incorrect attempts
+      // Adaptive disclosure: track both per-puzzle and per-session mistake counts
       setMistakeCount((n) => n + 1)
+      sessionMistakesRef.current += 1
       setTrayShakeIdx(trayPipeIdx)
       if (slotIdx != null) setSlotShakeIdx(slotIdx)
       playSfx('wrong')
@@ -545,6 +606,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
       setHintsTotal((h) => h + hintsUsed)
     } else if (allFilled) {
       setMistakeCount((n) => n + 1)
+      sessionMistakesRef.current += 1
       playSfx('wrong')
       setValveState('failed')
       const diff = liveResult - puzzle.target
@@ -771,18 +833,53 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
     valveState === 'open'   ? 'OPEN'   :
     valveState === 'failed' ? 'WRONG'  : 'LOCKED'
 
-  // ── Progressive disclosure: what secondary UI to show by default ─────────
-  // Easy   → show instruction tip + eq hint line always (most support)
-  // Normal → show tip only after ≥2 mistakes, hide eq hint by default
-  // Hard   → hide tip and eq hint unless ≥3 mistakes (bare essential task UI)
+  // ── Adaptive progressive disclosure ──────────────────────────────────────
+  // Step 1: derive the base expertise tier from the player's cumulative history.
+  const baseTier = getExpertiseTier(profileRef.current, difficulty)
+
+  // Step 2: compute in-session override signals.
+  //
+  //   "Struggling": the player is having a hard time RIGHT NOW.
+  //     Triggers if: ≥3 mistakes on the current puzzle (acute struggle),
+  //     OR if they are averaging ≥2 mistakes per finished question (sustained).
+  //   When struggling, temporarily show novice-level help even for veterans.
+  const avgMistakesPerQ = questionNum > 1
+    ? sessionMistakesRef.current / (questionNum - 1)
+    : 0
+  const isStruggling = mistakeCount >= 3 || avgMistakesPerQ >= 2
+
+  //   "On a streak": the player is performing well without help.
+  //     Triggers after ≥3 consecutive hint-free solves this session.
+  //   When on a streak, temporarily show expert-level UI even for beginners.
+  const isOnStreak = cleanSolvesThisSession >= 3
+
+  // Step 3: effective tier — override takes priority over base tier.
+  //   struggling > streak > base profile tier
+  const adaptiveTier =
+    isStruggling ? 'novice'
+    : isOnStreak  ? 'expert'
+    : baseTier
+
+  // Step 4: gate UI elements based on adaptiveTier + per-puzzle mistake count.
+  //
+  //   Instruction tip ("Select a pipe / place it on the highlighted row"):
+  //     novice       → always visible while puzzle is interactive
+  //     intermediate → revealed after 1 mistake
+  //     expert       → revealed after 3 mistakes (or when struggling override fires)
   const showSlotTip = isActive && (
-    difficulty === 'Easy' ||
-    (difficulty === 'Normal' && mistakeCount >= 2) ||
-    (difficulty === 'Hard'   && mistakeCount >= 3)
+    adaptiveTier === 'novice' ||
+    (adaptiveTier === 'intermediate' && mistakeCount >= 1) ||
+    (adaptiveTier === 'expert'       && mistakeCount >= 3)
   )
+
+  //   Running-total hint line below the equation:
+  //     novice       → always visible
+  //     intermediate → revealed after 2 mistakes
+  //     expert       → revealed after 3 mistakes
   const showEqHintLine = (
-    difficulty === 'Easy' ||
-    (difficulty !== 'Easy' && mistakeCount >= 2)
+    adaptiveTier === 'novice' ||
+    (adaptiveTier === 'intermediate' && mistakeCount >= 2) ||
+    (adaptiveTier === 'expert'       && mistakeCount >= 3)
   )
 
   return (
@@ -889,23 +986,37 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                       <stop offset="45%"  stopColor="white" stopOpacity="0.12" />
                       <stop offset="100%" stopColor="white" stopOpacity="0" />
                     </linearGradient>
+                    {/* Water-flow gradient: bright cyan-to-blue for the animated fill */}
+                    <linearGradient id="pb-gWater" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%"   stopColor="#38bdf8" />
+                      <stop offset="40%"  stopColor="#22d3ee" />
+                      <stop offset="70%"  stopColor="#67e8f9" />
+                      <stop offset="100%" stopColor="#38bdf8" />
+                    </linearGradient>
                   </defs>
                 </svg>
 
-                {/* Start pipe (fixed) */}
-                <div className="pb-row pb-row--fixed">
+                {/* Start pipe (fixed) — water flow begins here */}
+                <div className={`pb-row pb-row--fixed${flowing ? ' pb-row--water' : ''}`}>
                   <span className="pb-tag pb-tag--start">START</span>
-                  <PipeSVG variant="right-up" value={puzzle.start} kind="start" />
+                  <PipeSVG variant="right-up" value={puzzle.start} kind="start"
+                    isFlowing={flowing} flowDelay="0ms" />
                 </div>
 
-                <PBConnector side="left" />
+                <PBConnector side="left" isFlowing={flowing} flowDelay="0.25s" />
 
-                {/* Playable rows */}
+                {/* Playable rows — water flow cascades top-to-bottom with staggered delays */}
                 {slots.map((slot, i) => {
                   const variant = rowVariant(i)
                   const expectedSide = i === 0
                     ? 'left'
                     : slots[i - 1] ? PIPE_VARIANTS[rowVariant(i - 1)].downSide : null
+
+                  // Each playable row is offset by 0.45s from the start pipe.
+                  // Pattern: start(0s) → conn(0.25s) → row0(0.45s) → conn(0.7s) → row1(0.9s) → ...
+                  const rowDelay  = `${0.45 + i * 0.45}s`
+                  const connDelay = `${0.7 + i * 0.45}s`
+                  const slotFlowing = flowing && slot
 
                   const rowCls = [
                     'pb-row',
@@ -913,10 +1024,9 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                     boardActiveRow === i                 ? 'pb-row--active'   : '',
                     !slot && isActive && selIdx !== null ? 'pb-row--ready'    : '',
                     dragOverSlot === i                   ? 'pb-row--dragover' : '',
-                    flowing && slot                     ? 'pb-row--flowing'  : '',
+                    slotFlowing                          ? 'pb-row--flowing pb-row--water' : '',
                     slot?.pipeIdx === hintPipeIdx        ? 'pb-row--hinted'   : '',
                     slotShakeIdx === i                   ? 'pb-row--shake-error' : '',
-                    isMatch && slot                      ? 'pb-row--solved-glow' : '',
                   ].filter(Boolean).join(' ')
 
                   return (
@@ -931,7 +1041,8 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                         <span className="pb-num">{i + 1}</span>
                         {slot ? (
                           <>
-                            <PipeSVG variant={variant} value={slot.value} />
+                            <PipeSVG variant={variant} value={slot.value}
+                              isFlowing={slotFlowing} flowDelay={rowDelay} />
                             <button
                               className={`pb-op${mode === 'mixed' ? ' pb-op--click' : ''}`}
                               onClick={(e) => { e.stopPropagation(); handleOpToggle(i) }}
@@ -945,21 +1056,32 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                         )}
                       </div>
                       {i < nSlots - 1 && (
-                        <PBConnector side={slot ? PIPE_VARIANTS[variant].downSide : null} />
+                        <PBConnector
+                          side={slot ? PIPE_VARIANTS[variant].downSide : null}
+                          isFlowing={slotFlowing}
+                          flowDelay={connDelay}
+                        />
                       )}
                     </div>
                   )
                 })}
 
-                <PBConnector side={
-                  slots[nSlots - 1]
-                    ? PIPE_VARIANTS[rowVariant(nSlots - 1)].downSide
-                    : null
-                } />
+                <PBConnector
+                  side={
+                    slots[nSlots - 1]
+                      ? PIPE_VARIANTS[rowVariant(nSlots - 1)].downSide
+                      : null
+                  }
+                  isFlowing={flowing && slots[nSlots - 1]}
+                  flowDelay={`${0.7 + (nSlots - 1) * 0.45}s`}
+                />
 
-                {/* End pipe (fixed) */}
-                <div className="pb-row pb-row--fixed">
-                  <PipeSVG variant={endVariant} value={puzzle.target} kind="end" />
+                {/* End pipe (fixed) — water arrives last */}
+                <div className={`pb-row pb-row--fixed${flowing ? ' pb-row--water' : ''}`}>
+                  <PipeSVG variant={endVariant} value={puzzle.target} kind="end"
+                    isFlowing={flowing}
+                    flowDelay={`${0.45 + nSlots * 0.45}s`}
+                  />
                   <span className="pb-tag pb-tag--end">TARGET</span>
                 </div>
               </div>

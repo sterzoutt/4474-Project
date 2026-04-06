@@ -106,9 +106,44 @@
   box-shadow: 0 0 16px rgba(0, 249, 12, 0.3);
 }
 
-/* Water flowing through a filled pipe */
-.pb-row--flowing .pb-svg {
-  filter: hue-rotate(170deg) saturate(2.2) brightness(1.3);
+/* ── Water flow: SVG path drawing animation ──────────────────────────
+   The .pb-water-path is a cyan overlay drawn on top of the pipe path.
+   stroke-dasharray = total path length (approx 520).
+   stroke-dashoffset starts at 520 (hidden) and animates to 0 (fully drawn)
+   giving the illusion of water filling the pipe segment.               */
+.pb-water-path {
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: pipeWaterDraw 0.55s ease-out forwards;
+  filter: drop-shadow(0 0 6px rgba(56,189,248,0.7));
+  opacity: 0.88;
+}
+
+@keyframes pipeWaterDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Connector water line */
+.pb-water-conn {
+  opacity: 0;
+  animation: connWaterFade 0.2s ease-out forwards;
+}
+
+@keyframes connWaterFade {
+  to { opacity: 0.85; }
+}
+
+/* Row-level water glow: a subtle outer glow that fades in with the water */
+.pb-row--water {
+  animation: rowWaterGlow 0.6s ease-out forwards;
+}
+
+@keyframes rowWaterGlow {
+  0%  { box-shadow: none; border-color: transparent; }
+  100% {
+    box-shadow: 0 0 16px rgba(56,189,248,0.35), inset 0 0 8px rgba(34,211,238,0.12);
+    border-color: rgba(56,189,248,0.4);
+  }
 }
 
 /* Hint highlight */

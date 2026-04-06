@@ -752,43 +752,54 @@
 
 /* ============================================================
    WATER FLOW ANIMATION
-   .pg-flowing is applied to pipe elements with cascade delays.
-   hue-rotate(130deg) shifts the green pipe palette → blue water.
+   The main water drawing is handled by the SVG .pb-water-path
+   in PipeBoard.css. These styles handle the measurement pipes
+   and the vertical connector.
    ============================================================ */
-.pg-flowing {
-  animation: waterFill 0.6s ease-out forwards !important;
-  animation-fill-mode: both !important;
-}
 
-@keyframes waterFill {
-  0%  { filter: brightness(1); }
-  35% { filter: hue-rotate(120deg) saturate(2.4) brightness(1.35); }
-  100% {
-    filter: hue-rotate(130deg) saturate(2.8) brightness(1.45);
-    box-shadow: 0 0 24px rgba(56,189,248,0.62), inset 0 0 10px rgba(125,211,252,0.28);
-  }
-}
-
-/* Shimmer sweep on the barrel while water flows */
-.pg-mpipe.pg-flowing .pg-barrel::after {
+/* Measurement pipe barrel water effect: animated gradient fill */
+.pg-mpipe.pg-flowing .pg-barrel::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: 2px;
+  border-radius: 6px;
   background: linear-gradient(90deg,
-    transparent 0%, rgba(125,211,252,0.22) 40%,
-    rgba(255,255,255,0.18) 50%, rgba(125,211,252,0.12) 60%,
-    transparent 100%
+    rgba(56,189,248,0.5) 0%,
+    rgba(34,211,238,0.35) 50%,
+    rgba(56,189,248,0.5) 100%
   );
   background-size: 200% 100%;
-  animation: waterShimmer 0.9s ease-in-out 0.5s infinite;
-  border-radius: 8px;
+  animation: barrelWaterFill 0.8s ease-out forwards, barrelWaterShimmer 1.2s ease-in-out 0.8s infinite;
   pointer-events: none;
-  z-index: 10;
+  z-index: 5;
+  opacity: 0;
 }
-@keyframes waterShimmer {
-  0%   { background-position: -200% center; opacity: 0; }
-  25%  { opacity: 1; }
-  100% { background-position: 200% center; opacity: 0; }
+
+@keyframes barrelWaterFill {
+  0%   { clip-path: inset(0 100% 0 0); opacity: 0; }
+  30%  { opacity: 0.8; }
+  100% { clip-path: inset(0 0 0 0); opacity: 0.8; }
+}
+
+@keyframes barrelWaterShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Vertical connector between elements: water glow */
+.pg-vconn.pg-flowing {
+  background: linear-gradient(180deg,
+    rgba(56,189,248,0.5) 0%,
+    rgba(34,211,238,0.6) 50%,
+    rgba(56,189,248,0.5) 100%
+  ) !important;
+  box-shadow: 0 0 10px rgba(56,189,248,0.5);
+  animation: vconnFill 0.3s ease-out forwards;
+}
+
+@keyframes vconnFill {
+  0%  { opacity: 0; transform: scaleY(0); }
+  100% { opacity: 1; transform: scaleY(1); }
 }
 
 /* ============================================================
@@ -995,10 +1006,11 @@
   animation: pg-shake-horizontal 0.38s ease-in-out;
 }
 
-.pb-row--solved-glow .pb-svg path:nth-child(2) {
-  stroke: #22c55e !important;
-  filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.9));
-  transition: stroke 0.2s ease, filter 0.2s ease;
+/* Old green solved-glow replaced by the water-draw animation.
+   Keeping a subtle glow on flowing pipes for additional visual feedback. */
+.pb-row--water .pb-svg path:nth-child(2) {
+  filter: drop-shadow(0 0 6px rgba(56,189,248,0.5));
+  transition: filter 0.3s ease;
 }
 
 .pipe-chip--shake-error {
