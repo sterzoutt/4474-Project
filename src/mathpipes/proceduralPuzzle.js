@@ -157,19 +157,45 @@ function buildSolution(mode, slotCount, pipeRange, rng) {
   return genMixed(slotCount, pipeRange, rng)
 }
 
-function generateDistractorValues(solutionValues, count, pipeRange, rng) {
+const RULER_MIN = 1
+const RULER_MAX = 20
+
+/**
+ * Pipe values that must not appear as extra tray copies (distractors) or the
+ * puzzle is rejected as misleading — see hasMisleadingDistractor in puzzleSolver.
+ */
+function misleadingPipeValues(start, target, mode) {
+  const s = new Set()
+  if (mode === 'addition' || mode === 'mixed') {
+    const v = target - start
+    if (v >= RULER_MIN && v <= RULER_MAX) s.add(v)
+  }
+  if (mode === 'subtraction' || mode === 'mixed') {
+    const v = start - target
+    if (v >= RULER_MIN && v <= RULER_MAX) s.add(v)
+  }
+  return s
+}
+
+function generateDistractorValues(solutionValues, count, pipeRange, rng, start, target, mode) {
   const [lo, hi] = pipeRange
-  const solSet = new Set(solutionValues)
+  const misleading = misleadingPipeValues(start, target, mode)
+  const pool = []
+  for (let v = lo; v <= hi; v++) {
+    if (!misleading.has(v)) pool.push(v)
+  }
+  if (pool.length === 0) {
+    for (let v = lo; v <= hi; v++) pool.push(v)
+  }
   const out = []
   let guard = 0
   while (out.length < count && guard < 500) {
     guard++
-    const v = randInt(rng, lo, hi)
-    if (solSet.has(v) && rng() < 0.5) continue
+    const v = pool[Math.floor(rng() * pool.length)]
     out.push(v)
   }
   while (out.length < count) {
-    out.push(randInt(rng, lo, hi))
+    out.push(pool[Math.floor(rng() * pool.length)] ?? lo)
   }
   return out
 }
@@ -185,7 +211,10 @@ function assemblePuzzle(seed, mode, tierCfg, solution, rng) {
       solutionValues,
       distractorCount,
       tierCfg.pipeRange,
-      rng
+      rng,
+      solution.start,
+      solution.target,
+      mode
     )
     const pipes = shuffleArr([...solutionValues, ...distractors], rng)
 
@@ -229,8 +258,14 @@ function assemblePuzzle(seed, mode, tierCfg, solution, rng) {
 export function generatePuzzle(difficulty, mode, seed) {
   const tierKey = DIFFICULTY[difficulty] ? difficulty : 'mini'
   const tierCfg = DIFFICULTY[tierKey]
+  /**
+   * Outer loop: each iteration tries one RNG stream. If a seed is "unlucky", fail
+   * fast and let getPuzzle() try the next base seed — better than one multi‑second
+   * monolithic attempt that blocks the UI.
+   */
+  const globalMax = tierKey === 'hard' ? 36 : 120
 
-  for (let global = 0; global < 600; global++) {
+  for (let global = 0; global < globalMax; global++) {
     const s = seed + global * 29
     const r = createRng(s)
     let solution = null

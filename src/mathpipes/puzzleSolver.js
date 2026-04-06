@@ -32,12 +32,28 @@ export function prefixValidSequential(start, slotVals, operators, min = RULER_MI
     return true
 }
 
-export function findSolutions(puzzle, mode) {
+function answerKeyForSolution(s, puzzle, mode) {
+    const vals = s.pipeIndices.map((i) => puzzle.pipes[i]).sort((a, b) => a - b)
+    const valKey = vals.join(',')
+    if (mode === 'mixed') {
+        return `${valKey}|${s.operators.join('')}`
+    }
+    return valKey
+}
+
+/**
+ * @param {{ stopWhenAmbiguous?: boolean }} [options]
+ *        If `stopWhenAmbiguous` and mode is `mixed`, stop once two distinct answer
+ *        keys are found (speeds up rejecting ambiguous candidates during generation).
+ */
+export function findSolutions(puzzle, mode, options) {
+    const stopWhenAmbiguous = options?.stopWhenAmbiguous === true
     const { start, target, pipes, slotCount } = puzzle
     const n = pipes.length
     const idxs = Array.from({ length: n }, (_, i) => i)
     const perms = permutationsOfPipeIndices(idxs, slotCount)
     const solutions = []
+    const distinctKeys = mode === 'mixed' ? new Set() : null
 
     for (const perm of perms) {
         const vals = perm.map((i) => pipes[i])
@@ -48,7 +64,10 @@ export function findSolutions(puzzle, mode) {
                 )
                 if (!prefixValidSequential(start, vals, ops)) continue
                 if (evaluate(start, vals, ops) === target) {
-                    solutions.push({ pipeIndices: [...perm], operators: ops })
+                    const sol = { pipeIndices: [...perm], operators: ops }
+                    solutions.push(sol)
+                    distinctKeys.add(answerKeyForSolution(sol, puzzle, mode))
+                    if (stopWhenAmbiguous && distinctKeys.size > 1) return solutions
                 }
             }
         } else {
@@ -62,8 +81,7 @@ export function findSolutions(puzzle, mode) {
     return solutions
 }
 
-export function countDistinctAnswerKeys(puzzle, mode) {
-    const sols = findSolutions(puzzle, mode)
+function countDistinctAnswerKeysFromSolutions(sols, puzzle, mode) {
     const keys = new Set()
     for (const s of sols) {
         const vals = s.pipeIndices.map((i) => puzzle.pipes[i]).sort((a, b) => a - b)
@@ -75,6 +93,10 @@ export function countDistinctAnswerKeys(puzzle, mode) {
         }
     }
     return keys.size
+}
+
+export function countDistinctAnswerKeys(puzzle, mode) {
+    return countDistinctAnswerKeysFromSolutions(findSolutions(puzzle, mode), puzzle, mode)
 }
 
 /**
@@ -139,10 +161,11 @@ export function validatePuzzle(puzzle, mode) {
         return { ok: false, reason: 'target-out-of-range' }
     }
 
-    const n = findSolutions(puzzle, mode).length
+    const sols = findSolutions(puzzle, mode, { stopWhenAmbiguous: true })
+    const n = sols.length
     if (n === 0) return { ok: false, reason: 'unsolvable', solutionCount: 0 }
 
-    const distinctAnswers = countDistinctAnswerKeys(puzzle, mode)
+    const distinctAnswers = countDistinctAnswerKeysFromSolutions(sols, puzzle, mode)
     if (distinctAnswers > 1) {
         return { ok: false, reason: 'ambiguous-multiple-answers', solutionCount: n, distinctAnswers }
     }
