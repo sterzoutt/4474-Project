@@ -35,9 +35,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2px 4px;
-  border-radius: 6px;
-  border: 1.5px solid transparent;
+  padding: 6px 4px;
+  border-radius: 8px;
+  border: 2px solid transparent;
   transition: background 0.25s, box-shadow 0.25s, border-color 0.25s;
 }
 
@@ -61,9 +61,9 @@
 /* Empty playable row */
 .pb-row--empty {
   background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(74, 158, 222, 0.15);
+  border-color: rgba(74, 158, 222, 0.18);
   border-style: dashed;
-  min-height: 38px;
+  min-height: 48px;
 }
 
 /* Active row (highlighted for current placement) */
@@ -103,7 +103,7 @@
   border-color: rgba(189, 199, 0, 0.4) !important;
   border-style: dashed !important;
   cursor: pointer;
-  min-height: 38px;
+  min-height: 48px;
 }
 
 /* Accessibility: non-colour cue for invalid/wrong interaction (pairs with shake) */
@@ -264,7 +264,7 @@
 /* ── Pipe SVG ── */
 .pb-svg {
   width: 100%;
-  height: 48px;
+  height: 64px;
   display: block;
 }
 
@@ -289,13 +289,13 @@
 /* ── Connector strip between rows ── */
 .pb-conn {
   width: 100%;
-  height: 5px;
+  height: 7px;
   display: block;
   flex-shrink: 0;
 }
 
 .pb-gap {
-  height: 5px;
+  height: 7px;
   flex-shrink: 0;
 }
 
@@ -355,10 +355,9 @@
 @media (max-width: 600px) {
   .pb-board {
     max-width: 100%;
-    padding: 10px 6px;
+    padding: 14px 10px;
   }
-  .pb-svg { height: 40px; }
-  .pb-conn, .pb-gap { height: 4px; }
+  .pb-svg { height: 52px; }
   .pb-num {
     left: -22px;
     width: 16px;

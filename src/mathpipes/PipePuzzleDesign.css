@@ -467,7 +467,7 @@
   border-bottom: 2px solid rgba(255,255,255,0.15);
   background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.28));
   flex-shrink: 0;
-  min-height: 36px;
+  min-height: 50px;
   position: relative;
   overflow: visible;
 }
@@ -477,7 +477,8 @@
   position: absolute;
   left: -28px;
   right: -28px;
-  height: 26px;
+  height: 34px;
+  /* Repeat pipe segments with overlap so they look attached (no seams) */
   background-image: url('/straight-pipe.png');
   background-repeat: repeat-x;
   background-size: 170px 100%;
@@ -508,7 +509,7 @@
   justify-content: center;
   position: relative;
   font-family: var(--font-handw);
-  font-size: 12px;
+  font-size: 15px;
   color: #f3fff3;
   padding: 0;
   line-height: 1;
@@ -518,18 +519,18 @@
 
 .ruler:not(.ruler--bottom) .ruler__cell {
   align-items: flex-start;
-  padding-top: 3px;
+  padding-top: 5px;
 }
 
 .ruler.ruler--bottom .ruler__cell {
   align-items: flex-end;
-  padding-bottom: 3px;
+  padding-bottom: 5px;
 }
 .ruler__cell--active {
   color: var(--accent-green);
   font-weight: bold;
   text-shadow: 0 0 10px var(--accent-green);
-  transform: scale(1.3);
+  transform: scale(1.45);
 }
 .ruler__cell--flowing {
   color: #38bdf8;
@@ -543,7 +544,7 @@
 /* ── Slot Grid ─────────────────────────────────────────────── */
 .slot-grid {
   flex: 1;
-  padding: 4px 10px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -551,7 +552,7 @@
   min-height: 0;
   overflow: hidden;
   position: relative;
-  gap: 2px;
+  gap: 6px;
 }
 
 /* Subtle horizontal chalk lines */
@@ -568,7 +569,7 @@
 
 .slot-grid__tip {
   font-family: var(--font-chalk);
-  font-size: 12px;
+  font-size: 14px;
   color: var(--chalk-muted);
   text-align: center;
   position: relative;
@@ -718,26 +719,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 3px 12px;
+  gap: 5px;
+  padding: 5px 14px;
   background: var(--accent-yellow);
   border-radius: 8px;
   position: relative;
   z-index: 1;
   flex-shrink: 0;
   flex-wrap: wrap;
-  min-height: 26px;
+  min-height: 32px;
   width: 100%;
   max-width: 700px;
 }
-.eq-strip__num    { font-family: var(--font-mono); font-weight: 800; font-size: 16px; color: var(--chalk-green-dark); }
-.eq-strip__op     { font-family: var(--font-mono); font-weight: 800; font-size: 14px; color: rgba(30,70,50,0.7); margin: 0 1px; }
-.eq-strip__val    { font-family: var(--font-mono); font-weight: 800; font-size: 16px; }
+.eq-strip__num    { font-family: var(--font-mono); font-weight: 800; font-size: 20px; color: var(--chalk-green-dark); }
+.eq-strip__op     { font-family: var(--font-mono); font-weight: 800; font-size: 18px; color: rgba(30,70,50,0.7); margin: 0 2px; }
+.eq-strip__val    { font-family: var(--font-mono); font-weight: 800; font-size: 20px; }
 .eq-strip__val--placed { color: var(--chalk-green-dark); }
 .eq-strip__val--blank  { color: rgba(30,70,50,0.4); }
-.eq-strip__eq     { font-family: var(--font-mono); font-size: 14px; color: rgba(30,70,50,0.7); margin: 0 3px; }
-.eq-strip__result { font-family: var(--font-mono); font-weight: 800; font-size: 18px; color: var(--chalk-green-darker, #0a1a0a); }
-.eq-strip__check  { font-size: 16px; color: #006600; font-weight: bold; }
+.eq-strip__eq     { font-family: var(--font-mono); font-size: 18px; color: rgba(30,70,50,0.7); margin: 0 4px; }
+.eq-strip__result { font-family: var(--font-mono); font-weight: 800; font-size: 22px; color: var(--chalk-green-darker, #0a1a0a); }
+.eq-strip__check  { font-size: 20px; color: #006600; font-weight: bold; }
 .eq-strip--match  { background: var(--accent-green); animation: chalkGlow 1s ease-in-out infinite; }
 .eq-strip--match .eq-strip__num,
 .eq-strip--match .eq-strip__val--placed,
@@ -747,8 +748,8 @@
    AVAILABLE PIPES — Bottom toolbar
    ============================================================ */
 .pipes-bar {
-  border-top: 8px dashed var(--road-line);
-  padding: 6px 14px 6px;
+  border-top: 10px dashed var(--road-line);
+  padding: 8px 16px 8px;
   background: var(--road-grey);
   flex-shrink: 0;
   position: relative;
@@ -1141,9 +1142,9 @@
   .bg-brick-left, .bg-brick-right { width: 110px; }
   .bg-panel-left, .bg-panel-right { width: 86px; }
   .bg-panel-pipe { width: 70px; }
-  .ruler { min-height: 34px; padding: 0 8px; }
-  .ruler::before { height: 24px; background-size: 150px 100%; background-position: -14px center; }
-  .ruler__cell { font-size: 12px; }
+  .ruler { min-height: 56px; padding: 0 8px; }
+  .ruler::before { height: 28px; background-size: 150px 100%; background-position: -14px center; }
+  .ruler__cell { font-size: 15px; }
   .goal-footer { padding: 8px 14px; }
   .goal-footer__icon { width: 14px; height: 20px; }
   .goal-footer__text { font-size: 18px; }
@@ -1153,7 +1154,7 @@
   .game-root { width: 100vw; height: 100vh; max-height: 100vh; }
   .bg-brick-left, .bg-brick-right { width: 0; display: none; }
   .bg-panel-left, .bg-panel-right { display: none; }
-  .pipes-bar { border-top-width: 8px; }
+  .pipes-bar { border-top-width: 10px; }
   .pipes-bar__header {
     grid-template-columns: 1fr;
     justify-items: center;
@@ -1163,9 +1164,9 @@
   .pipes-bar__actions--right {
     justify-self: center;
   }
-  .ruler { min-height: 30px; padding: 0 6px; }
-  .ruler::before { height: 20px; background-size: 132px 100%; background-position: -10px center; }
-  .ruler__cell { font-size: 11px; }
+  .ruler { min-height: 46px; padding: 0 6px; }
+  .ruler::before { height: 22px; background-size: 132px 100%; background-position: -10px center; }
+  .ruler__cell { font-size: 13px; }
   .goal-footer { padding: 6px 10px; gap: 8px; }
   .goal-footer__icon { width: 12px; height: 16px; }
   .goal-footer__text { font-size: 14px; line-height: 1.2; }
