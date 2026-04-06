@@ -32,7 +32,21 @@ function OptionsScreen({ onBack }) {
 
   const handleMuteToggle = () => {
     playUiClick()
-    setTempSettings({ ...tempSettings, audioMuted: !tempSettings.audioMuted })
+    if (tempSettings.audioMuted) {
+      setTempSettings({
+        ...tempSettings,
+        audioMuted: false,
+        musicVolume: 50,
+        sfxVolume: 50,
+      })
+    } else {
+      setTempSettings({
+        ...tempSettings,
+        audioMuted: true,
+        musicVolume: 0,
+        sfxVolume: 0,
+      })
+    }
   }
 
   const handleSfxVolumeChange = (e) => {
@@ -145,7 +159,7 @@ function OptionsScreen({ onBack }) {
               <span className="toggle-on">ON</span>
             </button>
             <p className="audio-hint">
-              Sliders keep your levels; mute silences music and sound effects until you turn it back on.
+              Mute sets SFX and music to 0; turning mute off sets both volumes to 50.
             </p>
           </div>
 
