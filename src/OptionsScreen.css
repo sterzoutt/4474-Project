@@ -7,7 +7,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px 20px;
+  padding: 6px 16px;
   box-sizing: border-box;
   font-family: 'Indie Flower', cursive;
   position: relative;
@@ -16,20 +16,20 @@
 /* Back Button */
 .back-button {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 14px;
+  left: 16px;
   background: linear-gradient(180deg, #4ea64e 0%, #2f7d32 100%);
   border: 2px solid #7bcf76;
-  border-radius: 14px;
-  padding: 10px 20px;
-  font-size: 18px;
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-size: 15px;
   font-weight: bold;
   color: #f3fff3;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   z-index: 10;
   font-family: 'Indie Flower', cursive;
@@ -42,19 +42,19 @@
 .back-button:active { transform: translateY(0); }
 
 .back-icon {
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1;
 }
 
 /* Settings Header */
 .settings-header {
   width: 100%;
-  max-width: 860px;
+  max-width: 820px;
   background: rgba(255, 255, 255, 0.07);
   border: 2px solid #7bcf76;
-  border-radius: 12px;
-  padding: 8px 32px;
-  margin-bottom: 8px;
+  border-radius: 10px;
+  padding: 4px 24px;
+  margin-bottom: 5px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   position: relative;
 }
@@ -63,33 +63,33 @@
 .settings-panel {
   background: rgba(255, 255, 255, 0.07);
   border: 2px solid rgba(123, 207, 118, 0.4);
-  border-radius: 16px;
-  padding: 18px 44px 14px;
-  max-width: 860px;
+  border-radius: 14px;
+  padding: 10px 36px 10px;
+  max-width: 820px;
   width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 7px;
 }
 
 .settings-title {
   text-align: center;
-  font-size: 30px;
+  font-size: 24px;
   font-weight: bold;
   color: #d8ffd8;
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   margin: 0;
-  letter-spacing: 8px;
+  letter-spacing: 6px;
   font-family: 'Indie Flower', cursive;
 }
 
 /* Corner screws */
 .panel-screw {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   background: radial-gradient(circle, #7bcf76 30%, #2f7d32 70%);
   border-radius: 50%;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -97,46 +97,46 @@
 .panel-screw::before {
   content: '';
   position: absolute;
-  width: 8px;
+  width: 6px;
   height: 1px;
   background: rgba(0, 0, 0, 0.4);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
-.panel-screw.top-left    { top: 14px;    left: 14px;  }
-.panel-screw.top-right   { top: 14px;    right: 14px; }
-.panel-screw.bottom-left  { bottom: 14px; left: 14px;  }
-.panel-screw.bottom-right { bottom: 14px; right: 14px; }
+.panel-screw.top-left    { top: 10px;    left: 10px;  }
+.panel-screw.top-right   { top: 10px;    right: 10px; }
+.panel-screw.bottom-left  { bottom: 10px; left: 10px;  }
+.panel-screw.bottom-right { bottom: 10px; right: 10px; }
 
 /* Section */
 .settings-section { margin-bottom: 0; }
 
 .section-title {
-  font-size: 19px;
+  font-size: 16px;
   font-weight: bold;
   color: #d8ffd8;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  margin: 0 0 8px 0;
-  padding-left: 4px;
+  margin: 0 0 4px 0;
+  padding-left: 2px;
   font-family: 'Indie Flower', cursive;
 }
 
 /* Difficulty Buttons */
 .difficulty-buttons {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: space-between;
 }
 .difficulty-btn {
   flex: 1;
-  padding: 8px 16px;
-  font-size: 17px;
+  padding: 5px 12px;
+  font-size: 15px;
   font-weight: bold;
   color: #f3fff3;
   background: rgba(255, 255, 255, 0.1);
   border: 2px solid #7bcf76;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
@@ -157,27 +157,26 @@
 /* Difficulty hint line above buttons */
 .difficulty-hint-text {
   font-family: 'Indie Flower', cursive;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: rgba(216, 255, 216, 0.6);
-  margin: 0 0 0.4rem;
+  margin: 0 0 3px;
 }
 
 /* Description for the selected difficulty — shows below the buttons */
 .difficulty-desc {
-  margin: 0.5rem 0 0;
+  margin: 3px 0 0;
   font-family: 'Indie Flower', cursive;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: rgba(216, 255, 216, 0.78);
-  line-height: 1.4;
-  min-height: 2.4em;
+  line-height: 1.3;
 }
 
 /* Audio Controls */
 .audio-control {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 5px;
 }
 .audio-control:last-child { margin-bottom: 0; }
 
@@ -188,8 +187,8 @@
 
 .audio-hint {
   flex: 1 1 100%;
-  margin: 2px 0 0 100px;
-  font-size: 13px;
+  margin: 1px 0 0 90px;
+  font-size: 11px;
   line-height: 1.3;
   color: rgba(216, 255, 216, 0.72);
   font-family: 'Indie Flower', cursive;
@@ -201,18 +200,18 @@
 }
 
 .audio-label {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: bold;
   color: #d8ffd8;
-  min-width: 80px;
+  min-width: 68px;
   font-family: 'Indie Flower', cursive;
 }
 
 /* Toggle Button */
 .toggle-btn {
   position: relative;
-  width: 96px;
-  height: 30px;
+  width: 86px;
+  height: 26px;
   background: rgba(255, 255, 255, 0.1);
   border: 2px solid #7bcf76;
   border-radius: 20px;
@@ -220,14 +219,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10px;
+  padding: 0 8px;
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
   transition: all 0.3s;
   flex-shrink: 0;
 }
 .toggle-off,
 .toggle-on {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: bold;
   color: rgba(216, 255, 216, 0.4);
   z-index: 2;
@@ -254,14 +253,14 @@
 .volume-control {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
 }
-.volume-icon { font-size: 18px; flex-shrink: 0; }
+.volume-icon { font-size: 16px; flex-shrink: 0; }
 
 .volume-slider {
   flex: 1;
-  height: 10px;
+  height: 8px;
   background: rgba(255, 255, 255, 0.15);
   border: 2px solid rgba(123, 207, 118, 0.4);
   border-radius: 8px;
@@ -272,8 +271,8 @@
 .volume-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   background: linear-gradient(180deg, #63b963 0%, #2f7d32 100%);
   border: 2px solid #7bcf76;
   border-radius: 50%;
@@ -281,8 +280,8 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 .volume-slider::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   background: linear-gradient(180deg, #63b963 0%, #2f7d32 100%);
   border: 2px solid #7bcf76;
   border-radius: 50%;
@@ -292,40 +291,40 @@
 .volume-slider:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .volume-value {
-  min-width: 48px;
-  height: 32px;
+  min-width: 40px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(123, 207, 118, 0.4);
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: bold;
   color: #d8ffd8;
-  padding: 0 8px;
+  padding: 0 6px;
   font-family: 'Indie Flower', cursive;
 }
 
 /* Action Buttons */
 .action-buttons {
   display: flex;
-  gap: 18px;
+  gap: 14px;
   justify-content: center;
   margin-top: 0;
 }
 .action-btn {
-  padding: 9px 40px;
-  font-size: 17px;
+  padding: 6px 32px;
+  font-size: 15px;
   font-weight: bold;
   color: #f3fff3;
   background: linear-gradient(180deg, #4ea64e 0%, #2f7d32 100%);
   border: 2px solid #7bcf76;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  min-width: 140px;
+  min-width: 120px;
   font-family: 'Indie Flower', cursive;
 }
 .action-btn:hover {
@@ -337,28 +336,28 @@
 
 /* ── Keyboard Shortcuts Section ──────────────────────────────────────────── */
 .kb-hint-text {
-  font-size: 13px;
+  font-size: 11px;
   color: rgba(216, 255, 216, 0.65);
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   font-family: 'Indie Flower', cursive;
 }
 
 .kb-bindings-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-bottom: 7px;
+  gap: 3px;
+  margin-bottom: 5px;
 }
 
 .kb-binding-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(123, 207, 118, 0.25);
-  border-radius: 8px;
-  padding: 6px 12px;
+  border-radius: 7px;
+  padding: 4px 10px;
 }
 
 .kb-binding-info {
@@ -370,28 +369,28 @@
 }
 
 .kb-binding-label {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: bold;
   color: #d8ffd8;
   font-family: 'Indie Flower', cursive;
 }
 
 .kb-binding-desc {
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(216, 255, 216, 0.55);
   font-family: 'Indie Flower', cursive;
 }
 
 /* Clickable key badge — looks like a real keyboard key */
 .kb-key-badge {
-  min-width: 60px;
-  padding: 4px 10px;
-  font-size: 14px;
+  min-width: 54px;
+  padding: 3px 8px;
+  font-size: 13px;
   font-weight: bold;
   color: #d8ffd8;
   background: rgba(255, 255, 255, 0.1);
   border: 2px solid #7bcf76;
-  border-radius: 6px;
+  border-radius: 5px;
   border-bottom-width: 3px;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
   cursor: pointer;
@@ -413,13 +412,13 @@
 
 /* Capture box shown while waiting for key press */
 .kb-capture-box {
-  min-width: 80px;
-  padding: 4px 10px;
-  font-size: 13px;
+  min-width: 70px;
+  padding: 3px 8px;
+  font-size: 12px;
   color: #fff;
   background: rgba(78, 166, 78, 0.35);
   border: 2px dashed #7bcf76;
-  border-radius: 6px;
+  border-radius: 5px;
   text-align: center;
   font-family: 'Indie Flower', cursive;
   cursor: default;
@@ -435,21 +434,21 @@
 
 /* Fixed shortcuts note at bottom */
 .kb-fixed-note {
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(216, 255, 216, 0.55);
   margin: 0;
   font-family: 'Indie Flower', cursive;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .kb-fixed-key {
   display: inline-block;
-  padding: 1px 5px;
-  font-size: 12px;
+  padding: 1px 4px;
+  font-size: 11px;
   font-family: 'Courier New', monospace;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(123, 207, 118, 0.45);
-  border-radius: 4px;
+  border-radius: 3px;
   border-bottom-width: 2px;
   color: #d8ffd8;
   vertical-align: middle;
@@ -457,19 +456,19 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .settings-header { padding: 6px 16px; }
-  .settings-title  { font-size: 22px; letter-spacing: 4px; }
-  .settings-panel  { padding: 14px 20px 10px; gap: 10px; }
-  .section-title   { font-size: 16px; }
-  .difficulty-buttons { flex-direction: column; gap: 6px; }
-  .difficulty-btn  { font-size: 15px; padding: 6px 12px; }
-  .audio-control   { flex-wrap: wrap; gap: 10px; }
+  .settings-header { padding: 4px 12px; }
+  .settings-title  { font-size: 18px; letter-spacing: 3px; }
+  .settings-panel  { padding: 8px 16px 8px; gap: 6px; }
+  .section-title   { font-size: 14px; }
+  .difficulty-buttons { flex-direction: column; gap: 4px; }
+  .difficulty-btn  { font-size: 13px; padding: 4px 10px; }
+  .audio-control   { flex-wrap: wrap; gap: 8px; }
   .audio-label     { width: 100%; min-width: auto; }
   .volume-control  { width: 100%; flex: none; }
   .audio-hint      { margin-left: 0; }
-  .action-buttons  { flex-direction: column; gap: 10px; }
-  .action-btn      { width: 100%; min-width: auto; font-size: 15px; padding: 8px 24px; }
+  .action-buttons  { flex-direction: column; gap: 8px; }
+  .action-btn      { width: 100%; min-width: auto; font-size: 13px; padding: 6px 18px; }
   .kb-binding-row  { flex-wrap: wrap; }
   .kb-key-badge,
-  .kb-capture-box  { min-width: 52px; }
+  .kb-capture-box  { min-width: 46px; }
 }
