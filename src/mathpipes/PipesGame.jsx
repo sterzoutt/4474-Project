@@ -364,6 +364,10 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   const [hintStep,    setHintStep]   = useState(M.hintStep)
   const [hintsUsed,   setHintsUsed]  = useState(M.hintsUsed)
   const [wrongMsg,    setWrongMsg]   = useState(M.wrongMsg)
+  // Accessibility: screen-reader announcements for key state changes.
+  // We keep this separate from visual banners so assistive tech gets a clear,
+  // concise message even when the UI feedback is mostly visual.
+  const [liveMsg,    setLiveMsg]     = useState('')
 
   // Drag-and-drop presentational state (no logic changes to existing handlers)
   const [dragIdx,      setDragIdx]      = useState(null)
@@ -478,6 +482,15 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   const isCorrect  = gameState === 'correct'
   const isActive   = gameState === 'playing' && transPhase === null
 
+  // Hick's Law: reduce decision time by presenting tray options in a predictable order.
+  // We keep the *game logic* indices unchanged (pipeIdx still refers to the original
+  // position in puzzle.pipes), and only sort the *visual* rendering order.
+  const sortedTrayIdx = useMemo(() => {
+    return puzzle.pipes
+      .map((_, i) => i)
+      .sort((a, b) => puzzle.pipes[a] - puzzle.pipes[b])
+  }, [puzzle.pipes])
+
   // Valve ready/locked mirrors match state
   useEffect(() => {
     if (gameState !== 'playing') return
@@ -543,6 +556,18 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
     return () => clearTimeout(t)
   }, [transPhase])
 
+  // Accessibility: helper to reliably re-announce the same text.
+  // Setting '' first ensures screen readers treat it as a new message.
+  const announce = useCallback((msg) => {
+    setLiveMsg('')
+    window.requestAnimationFrame(() => setLiveMsg(msg))
+  }, [])
+
+  // Accessibility: announce when a new puzzle is loaded.
+  useEffect(() => {
+    announce(`Puzzle ${questionNum} of ${GAME_LENGTH} loaded.`)
+  }, [questionNum, announce])
+
   const rejectPlacement = useCallback(
     (trayPipeIdx, slotIdx) => {
       // Adaptive disclosure: track both per-puzzle and per-session mistake counts
@@ -551,12 +576,13 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
       setTrayShakeIdx(trayPipeIdx)
       if (slotIdx != null) setSlotShakeIdx(slotIdx)
       playSfx('wrong')
+      announce('Pipe cannot go there.')
       window.setTimeout(() => {
         setTrayShakeIdx(null)
         setSlotShakeIdx(null)
       }, 380)
     },
-    [playSfx]
+    [playSfx, announce]
   )
 
   // ── Interactions ──────────────────────────────────────────────────────────
@@ -604,6 +630,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
       playSfx('correct')
       setValveState('open')
       setGameState('flowing')
+      announce('Correct! Water is flowing.')
       const pts = hintsUsed === 0 ? 15 : 10
       setScore((s) => s + pts)
       setHintsTotal((h) => h + hintsUsed)
@@ -617,9 +644,10 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
         ? `Too high by ${diff} — try different pipes!`
         : `Too low by ${Math.abs(diff)} — try different pipes!`
       )
+      announce('Incorrect — try again.')
       setTimeout(() => { setValveState('locked'); setWrongMsg('') }, 1400)
     }
-  }, [isActive, isMatch, allFilled, liveResult, puzzle.target, hintsUsed, playSfx])
+  }, [isActive, isMatch, allFilled, liveResult, puzzle.target, hintsUsed, playSfx, announce])
 
   const handleReset = useCallback(() => {
     if (gameState !== 'playing' || transPhase !== null) return
@@ -638,8 +666,9 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
     setHintPipeIdx(idx >= 0 ? idx : null)
     setHintStep((s) => s + 1)
     setHintsUsed((h) => h + 1)
+    announce(`Hint: try pipe ${hVal}.`)
     setTimeout(() => setHintPipeIdx(null), 2400)
-  }, [isActive, puzzle, hintStep, usedIdx])
+  }, [isActive, puzzle, hintStep, usedIdx, announce])
 
   // ── Efficiency of use: keyboard shortcuts ────────────────────────────────
   // All shortcuts are additive — click/drag still works normally.
@@ -932,7 +961,20 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
           {/* Valve Sidebar */}
           <div className="valve-sidebar">
             <span className="valve-label">VALVE</span>
-            <div className={valveWidgetCls} onClick={handleValve} role="button" aria-label="Open valve" />
+            <div
+              className={valveWidgetCls}
+              onClick={handleValve}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleValve()
+                }
+              }}
+              role="button"
+              tabIndex={isActive ? 0 : -1}
+              aria-disabled={!isActive}
+              aria-label="Open valve"
+            />
             <div className="valve-pipe" />
             <span className="valve-status">{valveStatusText}</span>
           </div>
@@ -1039,9 +1081,23 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                       <div
                         className={rowCls}
                         onClick={() => handleSlotClick(i)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            handleSlotClick(i)
+                          }
+                        }}
                         onDragOver={(e) => handleSlotDragOver(e, i)}
                         onDragLeave={handleSlotDragLeave}
                         onDrop={(e) => handleSlotDrop(e, i)}
+                        role="button"
+                        tabIndex={isActive ? 0 : -1}
+                        aria-disabled={!isActive}
+                        aria-label={
+                          slot
+                            ? `Slot ${i + 1} — pipe ${slot.value}. Press Enter to remove.`
+                            : `Slot ${i + 1} — empty. Press Enter to place the selected pipe.`
+                        }
                       >
                         <span className="pb-num">{i + 1}</span>
                         {slot ? (
@@ -1185,8 +1241,14 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
             </div>
           </div>
           <div className="pipes-list">
-            {puzzle.pipes.map((val, i) => {
-              const st = trayState(i)
+            {(() => {
+              const mid = Math.ceil(sortedTrayIdx.length / 2)
+              const first = sortedTrayIdx.slice(0, mid)
+              const second = sortedTrayIdx.slice(mid)
+
+              const renderChip = (i) => {
+                const val = puzzle.pipes[i]
+                const st = trayState(i)
               const chipCls = [
                 'pipe-chip',
                 st === 'selected' ? 'pipe-chip--selected' : '',
@@ -1219,12 +1281,25 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                   )}
                 </button>
               )
-            })}
+              }
+
+              return (
+                <>
+                  {first.map(renderChip)}
+                  <div className="pipes-list__divider" aria-hidden="true" />
+                  {second.map(renderChip)}
+                </>
+              )
+            })()}
           </div>
         </div>
 
         {/* ── Overlays ── */}
         {wrongMsg && <div className="wrong-banner">{wrongMsg}</div>}
+        {/* Accessibility: screen-reader live announcements (assertive so mistakes/success are heard). */}
+        <div className="sr-only" aria-live="assertive" aria-atomic="true">
+          {liveMsg}
+        </div>
 
         {isCorrect && (
           <div className="correct-flash">

@@ -35,10 +35,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2px 0;
+  padding: 6px 4px;
   border-radius: 8px;
   border: 2px solid transparent;
   transition: background 0.25s, box-shadow 0.25s, border-color 0.25s;
+}
+
+/* Accessibility: clear keyboard focus indicator for board rows */
+.pb-row:focus-visible {
+  outline: 3px solid rgba(56, 189, 248, 0.95);
+  outline-offset: 3px;
 }
 
 /* Fixed rows (start / end) — grey border to match the structural pipe look */
@@ -57,6 +63,7 @@
   background: rgba(0, 0, 0, 0.05);
   border-color: rgba(74, 158, 222, 0.18);
   border-style: dashed;
+  min-height: 48px;
 }
 
 /* Active row (highlighted for current placement) */
@@ -96,6 +103,28 @@
   border-color: rgba(189, 199, 0, 0.4) !important;
   border-style: dashed !important;
   cursor: pointer;
+  min-height: 48px;
+}
+
+/* Accessibility: non-colour cue for invalid/wrong interaction (pairs with shake) */
+.pb-row--shake-error::after {
+  content: '✕';
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono, 'Inconsolata', monospace);
+  font-size: 14px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(239, 68, 68, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+  pointer-events: none;
 }
 
 /* Drag hovering over an empty row */
