@@ -1,4 +1,5 @@
 import { getPuzzle } from './puzzleGenerator'
+import { loadGameSettings, gameDifficultyToPuzzleTier } from '../audio/audioSettings'
 
 export const SESSION_KEY = 'pipesGameSession'
 export const GAME_MODE_STORAGE_KEY = 'gameMode'
@@ -8,8 +9,16 @@ const VERSION = 1
 export const SESSION_QUESTION_COUNT = 8
 const Q_MAX = SESSION_QUESTION_COUNT
 
+const VALID_TIERS = new Set(['mini', 'easy', 'hard'])
+
 function defaultOps(count, mode) {
   return Array(count).fill(mode === 'subtraction' ? '-' : '+')
+}
+
+/** Read the tier saved on a session, or fall back to current settings. */
+function resolveTier(session) {
+  if (session && VALID_TIERS.has(session.puzzleTier)) return session.puzzleTier
+  return gameDifficultyToPuzzleTier(loadGameSettings().difficulty)
 }
 
 export function loadSession() {
@@ -56,21 +65,29 @@ export function isSessionLoadable() {
   const s = loadSession()
   if (!s || s.v !== VERSION) return false
   if (!['addition', 'subtraction', 'mixed'].includes(s.mode)) return false
-  if (s.sessionDone) return false   // finished games cannot be "continued"
+  if (s.sessionDone) return false
+  const tier = resolveTier(s)
   const qn = Math.min(Math.max(1, Number(s.questionNum) || 1), Q_MAX)
-  const puzzle = getPuzzle('mini', s.mode, qn - 1)
+  const puzzle = getPuzzle(tier, s.mode, qn - 1)
   if (!Array.isArray(s.slots) || s.slots.length !== puzzle.slotCount) return false
   return true
 }
 
 /**
  * One-time mount state for PipesGame (resume mid-puzzle or fresh session).
+ * puzzleTier is resolved from the saved session (so Continue keeps the same
+ * difficulty layout) or from the current Settings when starting fresh.
  */
 export function buildInitialMountState(mode, initialSession) {
+  // Resolve the tier: prefer what was saved in the session so that a
+  // mid-game resume always uses the same puzzle layout that started it.
+  const tier = resolveTier(initialSession)
+
   const fresh = (questionNum = 1) => {
     const qn = Math.min(Math.max(1, questionNum), Q_MAX)
-    const puzzle = getPuzzle('mini', mode, qn - 1)
+    const puzzle = getPuzzle(tier, mode, qn - 1)
     return {
+      puzzleTier: tier,
       skipFirstPuzzleReset: false,
       questionNum: qn,
       score: 0,
@@ -94,7 +111,7 @@ export function buildInitialMountState(mode, initialSession) {
   }
 
   const qn = Math.min(Math.max(1, Number(initialSession.questionNum) || 1), Q_MAX)
-  const puzzle = getPuzzle('mini', mode, qn - 1)
+  const puzzle = getPuzzle(tier, mode, qn - 1)
   if (!Array.isArray(initialSession.slots) || initialSession.slots.length !== puzzle.slotCount) {
     return fresh(1)
   }
@@ -127,6 +144,7 @@ export function buildInitialMountState(mode, initialSession) {
   }
 
   let snap = {
+    puzzleTier: tier,
     skipFirstPuzzleReset: true,
     questionNum: qn,
     score: Math.max(0, Number(initialSession.score) || 0),

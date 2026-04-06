@@ -320,9 +320,13 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   const qRef = useRef(M.questionNum)
   qRef.current = questionNum
 
+  // Use the tier that was baked into the mount state (resolved from saved session
+  // or current Settings) so puzzles always match what the run was started on.
+  const puzzleTier = M.puzzleTier ?? 'mini'
+
   const puzzle = useMemo(
-    () => getPuzzle('mini', mode, questionNum - 1),
-    [mode, questionNum]
+    () => getPuzzle(puzzleTier, mode, questionNum - 1),
+    [puzzleTier, mode, questionNum]
   )
 
   const [slots,       setSlots]      = useState(() => M.slots.map((s) => (s ? { ...s } : null)))
@@ -383,6 +387,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
     }
     saveSession(
       packSessionForStorage(mode, {
+        puzzleTier,
         questionNum,
         score,
         hintsTotal,
@@ -400,6 +405,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
       })
     )
   }, [
+    puzzleTier,
     mode,
     questionNum,
     score,

@@ -154,6 +154,24 @@
   transform: translateY(0);
 }
 
+/* Difficulty hint line above buttons */
+.difficulty-hint-text {
+  font-family: 'Indie Flower', cursive;
+  font-size: 0.82rem;
+  color: rgba(216, 255, 216, 0.6);
+  margin: 0 0 0.4rem;
+}
+
+/* Description for the selected difficulty — shows below the buttons */
+.difficulty-desc {
+  margin: 0.5rem 0 0;
+  font-family: 'Indie Flower', cursive;
+  font-size: 0.88rem;
+  color: rgba(216, 255, 216, 0.78);
+  line-height: 1.4;
+  min-height: 2.4em;
+}
+
 /* Audio Controls */
 .audio-control {
   display: flex;

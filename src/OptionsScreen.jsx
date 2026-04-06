@@ -5,6 +5,7 @@ import {
   getDefaultGameSettings,
   loadGameSettings,
   saveGameSettings,
+  DIFFICULTY_TOOLTIPS,
 } from './audio/audioSettings'
 import {
   loadKeyBindings,
@@ -103,17 +104,26 @@ function OptionsScreen({ onBack }) {
         {/* Difficulty */}
         <div className="settings-section">
           <h2 className="section-title">Difficulty</h2>
+          <p className="difficulty-hint-text">
+            Hover a difficulty to see what changes.
+          </p>
           <div className="difficulty-buttons">
             {['Easy', 'Normal', 'Hard'].map((d) => (
               <button
                 key={d}
                 className={`difficulty-btn ${tempSettings.difficulty === d ? 'active' : ''}`}
                 onClick={() => handleDifficultyChange(d)}
+                title={DIFFICULTY_TOOLTIPS[d]}
+                aria-describedby={`diff-desc-${d}`}
               >
                 {d}
               </button>
             ))}
           </div>
+          {/* Visible description for the currently selected difficulty */}
+          <p className="difficulty-desc" id={`diff-desc-${tempSettings.difficulty}`}>
+            {DIFFICULTY_TOOLTIPS[tempSettings.difficulty]}
+          </p>
         </div>
 
         {/* Audio */}

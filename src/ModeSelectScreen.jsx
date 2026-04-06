@@ -3,6 +3,7 @@ import {
   isSessionLoadable,
   SESSION_QUESTION_COUNT,
 } from './mathpipes/pipesSession'
+import { puzzleTierShortLabel } from './audio/audioSettings'
 import './ModeSelectScreen.css'
 
 const MODE_LABEL = {
@@ -47,6 +48,12 @@ export default function ModeSelectScreen({ onBack, onEnterGame }) {
                 <span className="mode-select-save-label">Score so far</span>
                 <span className="mode-select-save-val">
                   {typeof saved.score === 'number' ? saved.score : 0} pts
+                </span>
+              </div>
+              <div className="mode-select-save-row">
+                <span className="mode-select-save-label">Challenge</span>
+                <span className="mode-select-save-val">
+                  {puzzleTierShortLabel(saved.puzzleTier)}
                 </span>
               </div>
             </div>
