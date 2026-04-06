@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef, Fragment } from 'react'
 import { getPuzzle } from './puzzleGenerator'
 import { isComplete } from './evaluator'
-import { PIPE_VARIANTS }        from './pipeTypes'
+// pipeTypes still used for logic elsewhere; visual rendering now uses dynamic geometry
 import {
   evaluateSequential,
   validatePlacement,
@@ -40,101 +40,125 @@ function puzzleOps(puzzle, mode) {
   return defaultOps(puzzle.slotCount, mode)
 }
 
-// ── Pipe board SVG helpers (visual only — copied from PipeBoard.jsx) ─────────
+// ── Dynamic board geometry — positions pipe rows to align with ruler values ───
+//
+// ViewBox is 1000 wide (double the original 500) so pipe endpoints can be placed
+// at any ruler position 1–20.  The y-axis stays 70 units (same visual proportions).
+// Each row's S-curve path is generated on-the-fly from the computed junction
+// values above and below it.
 
-const PIPE_D = {
-  'left-up':  'M 50,0 L 50,18 Q 50,35 70,35 L 430,35 Q 450,35 450,52 L 450,70',
-  'right-up': 'M 450,0 L 450,18 Q 450,35 430,35 L 70,35 Q 50,35 50,52 L 50,70',
+const BOARD_VB_W = 1000
+const BOARD_VB_H = 70
+
+function rulerX(v) {
+  const c = Math.min(Math.max(v, 1), RULER_MAX)
+  return ((c - 0.5) / RULER_MAX) * BOARD_VB_W
 }
 
-const CONN_X = { left: 50, right: 450 }
+function computeJunctions(start, target, nSlots, slots, operators) {
+  const vals = [start]
+  let running = start
+  let lastKnown = 0
 
-function PipeSVG({ variant, value, kind, isFlowing, flowDelay }) {
-  const d = PIPE_D[variant]
-  // All pipes use the same grey structural gradient so the path reads as one
-  // continuous system.  Start/end pipes get a slightly lighter variant so the
-  // fixed values still stand out without breaking the grey colour scheme.
-  const grad =
-    kind === 'start' || kind === 'end'
-      ? 'url(#pb-gFixedGrey)'
-      : 'url(#pb-gPipe)'
+  for (let i = 0; i < nSlots; i++) {
+    if (slots[i] && lastKnown === i) {
+      running += operators[i] === '+' ? slots[i].value : -slots[i].value
+      vals.push(running)
+      lastKnown = i + 1
+    } else {
+      vals.push(null)
+    }
+  }
+  vals.push(target)
+
+  const from = vals[lastKnown]
+  const steps = nSlots + 1 - lastKnown
+  for (let i = lastKnown + 1; i <= nSlots; i++) {
+    if (vals[i] === null) {
+      vals[i] = from + (target - from) * (i - lastKnown) / steps
+    }
+  }
+  return vals
+}
+
+function dynamicPipeD(topX, botX) {
+  const dx = botX - topX
+  if (Math.abs(dx) < 6) return `M ${topX},0 L ${topX},${BOARD_VB_H}`
+  const dir = dx > 0 ? 1 : -1
+  const r = Math.min(17, Math.abs(dx) / 2)
+  const yE = 18
+  const yM = yE + r
+  return [
+    `M ${topX},0`,
+    `L ${topX},${yE}`,
+    `Q ${topX},${yM} ${topX + dir * r},${yM}`,
+    `L ${botX - dir * r},${yM}`,
+    `Q ${botX},${yM} ${botX},${yM + r}`,
+    `L ${botX},${BOARD_VB_H}`,
+  ].join(' ')
+}
+
+function PipeSVG({ topX, botX, value, kind, isFlowing, flowDelay }) {
+  const d = dynamicPipeD(topX, botX)
+  const grad = kind === 'start' || kind === 'end'
+    ? 'url(#pb-gFixedGrey)' : 'url(#pb-gPipe)'
+  const cx = (topX + botX) / 2
 
   return (
-    <svg viewBox="0 0 500 70" className="pb-svg">
-      <path
-        d={d} fill="none" stroke="rgba(0,0,0,0.5)"
-        strokeWidth="24" strokeLinecap="round" strokeLinejoin="round"
-      />
-      <path
-        d={d} fill="none" stroke={grad}
-        strokeWidth="18" strokeLinecap="round" strokeLinejoin="round"
-      />
-      {/* Water-flow overlay: animated stroke-dashoffset draws water along the pipe path */}
+    <svg viewBox={`0 0 ${BOARD_VB_W} ${BOARD_VB_H}`} className="pb-svg"
+      preserveAspectRatio="none">
+      <path d={d} fill="none" stroke="rgba(0,0,0,0.5)"
+        strokeWidth="24" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke={grad}
+        strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
       {isFlowing && (
-        <path
-          d={d} fill="none" stroke="url(#pb-gWater)"
+        <path d={d} fill="none" stroke="url(#pb-gWater)"
           strokeWidth="12" strokeLinecap="round" strokeLinejoin="round"
           className="pb-water-path"
-          style={flowDelay ? { animationDelay: flowDelay } : undefined}
-        />
+          style={flowDelay ? { animationDelay: flowDelay } : undefined} />
       )}
-      <path
-        d={d} fill="none" stroke="url(#pb-gShine)"
-        strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"
-      />
-      <text
-        x="250" y="35"
-        textAnchor="middle" dominantBaseline="central"
-        className="pb-val"
-      >
-        {value}
-      </text>
+      <path d={d} fill="none" stroke="url(#pb-gShine)"
+        strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+      <text x={cx} y="35" textAnchor="middle" dominantBaseline="central"
+        className="pb-val">{value}</text>
     </svg>
   )
 }
 
-function EmptySlotSVG({ expectedSide }) {
-  const x = expectedSide ? CONN_X[expectedSide] : null
+function EmptySlotSVG({ topX, botX }) {
+  const minX = Math.min(topX, botX)
+  const maxX = Math.max(topX, botX)
+  const cx = (topX + botX) / 2
 
   return (
-    <svg viewBox="0 0 500 70" className="pb-svg">
-      <line
-        x1="80" y1="35" x2="420" y2="35"
-        stroke="rgba(74,158,222,0.25)" strokeWidth="2" strokeDasharray="10 6"
-      />
-      {x != null && (
-        <>
-          <line
-            x1={x} y1="0" x2={x} y2="28"
-            stroke="rgba(189,199,0,0.55)" strokeWidth="2.5" strokeDasharray="4 3"
-          />
-          <polygon
-            points={`${x - 11},28 ${x + 11},28 ${x},10`}
-            fill="#BDC700" opacity="0.8"
-          />
-        </>
+    <svg viewBox={`0 0 ${BOARD_VB_W} ${BOARD_VB_H}`} className="pb-svg"
+      preserveAspectRatio="none">
+      {Math.abs(botX - topX) > 10 && (
+        <line x1={minX} y1="35" x2={maxX} y2="35"
+          stroke="rgba(74,158,222,0.25)" strokeWidth="2" strokeDasharray="10 6" />
       )}
-      <text x="250" y="52" textAnchor="middle" className="pb-ph">?</text>
+      <line x1={topX} y1="0" x2={topX} y2="28"
+        stroke="rgba(189,199,0,0.55)" strokeWidth="2.5" strokeDasharray="4 3" />
+      <polygon
+        points={`${topX - 11},28 ${topX + 11},28 ${topX},10`}
+        fill="#BDC700" opacity="0.8" />
+      <text x={cx} y="52" textAnchor="middle" className="pb-ph">?</text>
     </svg>
   )
 }
 
-function PBConnector({ side, isFlowing, flowDelay }) {
-  if (!side) return <div className="pb-gap" />
-  const x = CONN_X[side]
+function PBConnector({ connX, isFlowing, flowDelay }) {
+  if (connX == null) return <div className="pb-gap" />
   return (
-    <svg viewBox="0 0 500 10" className="pb-conn">
-      <line
-        x1={x} y1="0" x2={x} y2="10"
-        stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinecap="round"
-      />
+    <svg viewBox={`0 0 ${BOARD_VB_W} 10`} className="pb-conn"
+      preserveAspectRatio="none">
+      <line x1={connX} y1="0" x2={connX} y2="10"
+        stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinecap="round" />
       {isFlowing && (
-        <line
-          x1={x} y1="0" x2={x} y2="10"
+        <line x1={connX} y1="0" x2={connX} y2="10"
           stroke="url(#pb-gWater)" strokeWidth="8" strokeLinecap="round"
           className="pb-water-conn"
-          style={flowDelay ? { animationDelay: flowDelay } : undefined}
-        />
+          style={flowDelay ? { animationDelay: flowDelay } : undefined} />
       )}
     </svg>
   )
@@ -862,10 +886,14 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   const nSlots   = puzzle.slotCount
   const modePill = { addition: '+ Addition', subtraction: '− Subtraction', mixed: '± Mixed' }[mode]
 
-  // Pipe board variant computation — alternating left-up / right-up
-  const rowVariant = (i) => i % 2 === 0 ? 'left-up' : 'right-up'
+  // Dynamic board geometry: junction positions aligned with ruler values
+  const jxs = useMemo(
+    () => computeJunctions(puzzle.start, puzzle.target, nSlots, slots, operators)
+      .map(v => rulerX(v)),
+    [puzzle.start, puzzle.target, nSlots, slots, operators]
+  )
+
   const boardActiveRow = isActive ? slots.findIndex(s => s === null) : -1
-  const endVariant = nSlots % 2 === 0 ? 'left-up' : 'right-up'
 
   const boardCls = [
     'pg-pipes-area',
@@ -1076,23 +1104,19 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                   </defs>
                 </svg>
 
-                {/* Top fixed pipe — equation starting value */}
+                {/* Top fixed pipe — anchored at start ruler value */}
                 <div className={`pb-row pb-row--fixed${flowing ? ' pb-row--water' : ''}`}>
-                  <PipeSVG variant="right-up" value={puzzle.start} kind="start"
+                  <PipeSVG topX={jxs[0]} botX={jxs[0]}
+                    value={puzzle.start} kind="start"
                     isFlowing={flowing} flowDelay="0ms" />
                 </div>
 
-                <PBConnector side="left" isFlowing={flowing} flowDelay="0.25s" />
+                <PBConnector connX={jxs[0]} isFlowing={flowing} flowDelay="0.25s" />
 
-                {/* Playable rows — water flow cascades top-to-bottom with staggered delays */}
+                {/* Playable rows — geometry derived from junction values */}
                 {slots.map((slot, i) => {
-                  const variant = rowVariant(i)
-                  const expectedSide = i === 0
-                    ? 'left'
-                    : slots[i - 1] ? PIPE_VARIANTS[rowVariant(i - 1)].downSide : null
-
-                  // Each playable row is offset by 0.45s from the start pipe.
-                  // Pattern: start(0s) → conn(0.25s) → row0(0.45s) → conn(0.7s) → row1(0.9s) → ...
+                  const topX = jxs[i]
+                  const botX = jxs[i + 1]
                   const rowDelay  = `${0.45 + i * 0.45}s`
                   const connDelay = `${0.7 + i * 0.45}s`
                   const slotFlowing = flowing && slot
@@ -1134,7 +1158,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                         <span className="pb-num">{i + 1}</span>
                         {slot ? (
                           <>
-                            <PipeSVG variant={variant} value={slot.value}
+                            <PipeSVG topX={topX} botX={botX} value={slot.value}
                               isFlowing={slotFlowing} flowDelay={rowDelay} />
                             <button
                               className={`pb-op${mode === 'mixed' ? ' pb-op--click' : ''}`}
@@ -1145,12 +1169,12 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                             </button>
                           </>
                         ) : (
-                          <EmptySlotSVG expectedSide={expectedSide} />
+                          <EmptySlotSVG topX={topX} botX={botX} />
                         )}
                       </div>
                       {i < nSlots - 1 && (
                         <PBConnector
-                          side={slot ? PIPE_VARIANTS[variant].downSide : null}
+                          connX={slot ? jxs[i + 1] : null}
                           isFlowing={slotFlowing}
                           flowDelay={connDelay}
                         />
@@ -1160,18 +1184,15 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                 })}
 
                 <PBConnector
-                  side={
-                    slots[nSlots - 1]
-                      ? PIPE_VARIANTS[rowVariant(nSlots - 1)].downSide
-                      : null
-                  }
+                  connX={slots[nSlots - 1] ? jxs[nSlots] : null}
                   isFlowing={flowing && slots[nSlots - 1]}
                   flowDelay={`${0.7 + (nSlots - 1) * 0.45}s`}
                 />
 
-                {/* Bottom fixed pipe — equation target value */}
+                {/* Bottom fixed pipe — anchored at target ruler value */}
                 <div className={`pb-row pb-row--fixed${flowing ? ' pb-row--water' : ''}`}>
-                  <PipeSVG variant={endVariant} value={puzzle.target} kind="end"
+                  <PipeSVG topX={jxs[nSlots]} botX={jxs[nSlots + 1]}
+                    value={puzzle.target} kind="end"
                     isFlowing={flowing}
                     flowDelay={`${0.45 + nSlots * 0.45}s`}
                   />

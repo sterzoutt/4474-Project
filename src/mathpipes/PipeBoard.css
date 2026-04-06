@@ -141,8 +141,8 @@
    stroke-dashoffset starts at 520 (hidden) and animates to 0 (fully drawn)
    giving the illusion of water filling the pipe segment.               */
 .pb-water-path {
-  stroke-dasharray: 520;
-  stroke-dashoffset: 520;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
   animation: pipeWaterDraw 0.55s ease-out forwards;
   filter: drop-shadow(0 0 6px rgba(56,189,248,0.7));
   opacity: 0.88;
@@ -182,11 +182,12 @@
   box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
 }
 
-/* Inline board variant (inside the Play screen layout) */
+/* Inline board variant (inside the Play screen layout)
+   No max-width — spans full ruler width for dynamic alignment. */
 .pb-board--inline {
-  max-width: 500px;
+  max-width: none;
   width: 100%;
-  padding: 4px 8px;
+  padding: 4px 0;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -263,7 +264,7 @@
 /* ── Pipe SVG ── */
 .pb-svg {
   width: 100%;
-  height: auto;
+  height: 64px;
   display: block;
 }
 
@@ -356,6 +357,7 @@
     max-width: 100%;
     padding: 14px 10px;
   }
+  .pb-svg { height: 52px; }
   .pb-num {
     left: -22px;
     width: 16px;

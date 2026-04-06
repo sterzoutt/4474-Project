@@ -544,7 +544,7 @@
 /* ── Slot Grid ─────────────────────────────────────────────── */
 .slot-grid {
   flex: 1;
-  padding: 6px 16px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   justify-content: center;
