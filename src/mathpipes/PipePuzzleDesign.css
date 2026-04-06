@@ -964,6 +964,65 @@ button.pipe-chip--action:nth-of-type(3).pipe-chip--selected {
   animation: chalkGlow 1s ease-in-out infinite;
 }
 
+/* ── VALIDATE button — two clear states: locked (grey) vs ready (green) ─── */
+.pipe-chip--validate {
+  flex-direction: row;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 10px 20px;
+  min-height: 44px;
+  border-radius: 6px;
+  border: 3px solid;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease,
+              box-shadow 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+.pipe-chip--validate::before,
+.pipe-chip--validate::after { display: none; }
+.pipe-chip--validate:focus-visible {
+  outline: 3px solid rgba(56, 189, 248, 0.95);
+  outline-offset: 3px;
+}
+
+/* Locked / disabled state — grey, no hover effect */
+.pipe-chip--validate-locked {
+  background: #1a1a1a;
+  color: #666;
+  border-color: #444;
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.pipe-chip--validate-locked:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Ready state — green, pulsing glow */
+.pipe-chip--validate-ready {
+  background: linear-gradient(180deg, #2e7d32, #1b5e20);
+  color: #a5d6a7;
+  border-color: #66bb6a;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  animation: validateReadyPulse 0.9s ease-in-out infinite alternate;
+}
+.pipe-chip--validate-ready:hover:not(:disabled) {
+  background: linear-gradient(180deg, #388e3c, #2e7d32);
+  border-color: #81c784;
+  box-shadow: 0 0 18px rgba(76, 175, 80, 0.75);
+  transform: translateY(-2px) scale(1.05);
+}
+.pipe-chip--validate-ready:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+
+@keyframes validateReadyPulse {
+  from { box-shadow: 0 0 8px rgba(76, 175, 80, 0.4); }
+  to   { box-shadow: 0 0 20px rgba(76, 175, 80, 0.85); }
+}
+
 /* ── "? HOW" button — progressive disclosure trigger ───────────────────────
    Intentionally muted so it doesn't compete with the primary action buttons,
    but still visually distinct as an informational affordance.               */

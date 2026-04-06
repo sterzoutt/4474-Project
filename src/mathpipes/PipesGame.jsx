@@ -874,6 +874,12 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
     valveState === 'open'   ? 'OPEN'   :
     valveState === 'failed' ? 'WRONG'  : 'LOCKED'
 
+  const validateBtnCls = [
+    'pipe-chip',
+    'pipe-chip--validate',
+    valveState === 'ready' ? 'pipe-chip--validate-ready' : 'pipe-chip--validate-locked',
+  ].join(' ')
+
   // ── Adaptive progressive disclosure ──────────────────────────────────────
   // Step 1: derive the base expertise tier from the player's cumulative history.
   const baseTier = getExpertiseTier(profileRef.current, difficulty)
@@ -952,8 +958,8 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
 
           <span className="race-counter">Q{questionNum}/{GAME_LENGTH} &middot; {score}pts</span>
           {typeof onAbandon === 'function' && (
-            <button type="button" className="race-abandon-btn" onClick={() => { clearSession(); onAbandon() }}>
-              Abandon
+            <button type="button" className="race-abandon-btn" onClick={() => { clearSession(); onAbandon() }} title="Quit this session">
+              ✕ Abandon
             </button>
           )}
         </div>
@@ -967,9 +973,9 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
         {/* ── Main Body (valve + puzzle) ── */}
         <div className="game-body">
 
-          {/* Valve Sidebar */}
+          {/* Validate Sidebar */}
           <div className="valve-sidebar">
-            <span className="valve-label">VALVE</span>
+            <span className="valve-label">VALIDATE</span>
             <div
               className={valveWidgetCls}
               onClick={handleValve}
@@ -982,7 +988,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
               role="button"
               tabIndex={isActive ? 0 : -1}
               aria-disabled={!isActive}
-              aria-label="Open valve"
+              aria-label="Validate answer"
             />
             <div className="valve-pipe" />
             <span className="valve-status">{valveStatusText}</span>
@@ -1235,11 +1241,12 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
               >? HINT<kbd className="kbd-hint">H</kbd></button>
               <button
                 type="button"
-                className={`pipe-chip${valveState === 'ready' ? ' pipe-chip--selected' : ' pipe-chip--action'}`}
+                className={validateBtnCls}
                 onClick={handleValve}
                 disabled={!allFilled || !isActive}
-                title="Open valve [Enter]"
-              >&#9881; VALVE<kbd className="kbd-hint">↵</kbd></button>
+                title={allFilled ? 'Validate answer [Enter]' : 'Fill all slots first'}
+                aria-label="Validate answer"
+              >&#10003; VALIDATE<kbd className="kbd-hint">↵</kbd></button>
               {/* Progressive disclosure: "How it works" — reveals full explanation on demand */}
               <button
                 type="button"
