@@ -81,9 +81,20 @@ function computeJunctions(start, target, nSlots, slots, operators) {
   return vals
 }
 
-function dynamicPipeD(topX, botX) {
+function dynamicPipeD(topX, botX, hintDir) {
   const dx = botX - topX
-  if (Math.abs(dx) < 6) return `M ${topX},0 L ${topX},${BOARD_VB_H}`
+  if (Math.abs(dx) < 6) {
+    // Near-vertical anchor: draw a small S-curve bump so the pipe
+    // is visible and clearly reads as a pipe segment, not a thin line.
+    const d = (hintDir || 1) * 25
+    return [
+      `M ${topX},0`,
+      `L ${topX},18`,
+      `Q ${topX},35 ${topX + d},35`,
+      `Q ${botX},35 ${botX},52`,
+      `L ${botX},${BOARD_VB_H}`,
+    ].join(' ')
+  }
   const dir = dx > 0 ? 1 : -1
   const r = Math.min(17, Math.abs(dx) / 2)
   const yE = 18
@@ -98,8 +109,8 @@ function dynamicPipeD(topX, botX) {
   ].join(' ')
 }
 
-function PipeSVG({ topX, botX, value, kind, isFlowing, flowDelay }) {
-  const d = dynamicPipeD(topX, botX)
+function PipeSVG({ topX, botX, value, kind, isFlowing, flowDelay, hintDir }) {
+  const d = dynamicPipeD(topX, botX, hintDir)
   const grad = kind === 'start' || kind === 'end'
     ? 'url(#pb-gFixedGrey)' : 'url(#pb-gPipe)'
   const cx = (topX + botX) / 2
@@ -1107,6 +1118,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                 {/* Top fixed pipe — anchored at start ruler value */}
                 <div className={`pb-row pb-row--fixed${flowing ? ' pb-row--water' : ''}`}>
                   <PipeSVG topX={jxs[0]} botX={jxs[0]}
+                    hintDir={jxs[1] >= jxs[0] ? 1 : -1}
                     value={puzzle.start} kind="start"
                     isFlowing={flowing} flowDelay="0ms" />
                 </div>
@@ -1192,6 +1204,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
                 {/* Bottom fixed pipe — anchored at target ruler value */}
                 <div className={`pb-row pb-row--fixed${flowing ? ' pb-row--water' : ''}`}>
                   <PipeSVG topX={jxs[nSlots]} botX={jxs[nSlots + 1]}
+                    hintDir={jxs[nSlots] >= jxs[nSlots + 1] ? 1 : -1}
                     value={puzzle.target} kind="end"
                     isFlowing={flowing}
                     flowDelay={`${0.45 + nSlots * 0.45}s`}
