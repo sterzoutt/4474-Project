@@ -964,11 +964,14 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
                 </div>
               </div>
 
+            </div>{/* end slot-grid */}
+
+            {/* Equation strip — outside slot-grid so overflow:auto never clips it */}
+            <div className="pg-equation-area">
               <p className="pg-live-eq-line" title="Live expression (filled slots first)">
                 {liveEquationStr}
               </p>
 
-              {/* Live equation: left = playable expression, right = fixed goal only */}
               <div
                 className={`eq-strip${!allFilled ? '' : isMatch ? ' eq-strip--match' : ''}`}
                 aria-label={`Equation: build the left side to equal ${puzzle.target}`}
@@ -1002,8 +1005,7 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
                   {isMatch && <span>Left side equals the goal.</span>}
                 </p>
               )}
-
-            </div>{/* end slot-grid */}
+            </div>
 
             {/* Bottom Ruler — marks 1–20, TARGET value highlighted */}
             <div className="ruler ruler--bottom">
