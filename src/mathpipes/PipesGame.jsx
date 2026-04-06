@@ -33,6 +33,13 @@ function defaultOps(count, mode) {
   return Array(count).fill(mode === 'subtraction' ? '-' : '+')
 }
 
+function puzzleOps(puzzle, mode) {
+  if (Array.isArray(puzzle.defaultOperators) && puzzle.defaultOperators.length === puzzle.slotCount) {
+    return [...puzzle.defaultOperators]
+  }
+  return defaultOps(puzzle.slotCount, mode)
+}
+
 // ── Pipe board SVG helpers (visual only — copied from PipeBoard.jsx) ─────────
 
 const PIPE_D = {
@@ -418,7 +425,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
       return
     }
     setSlots(Array(puzzle.slotCount).fill(null))
-    setOperators(defaultOps(puzzle.slotCount, mode))
+    setOperators(puzzleOps(puzzle, mode))
     setSelIdx(null)
     setGameState('playing')
     setValveState('locked')
@@ -654,10 +661,10 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   const handleReset = useCallback(() => {
     if (gameState !== 'playing' || transPhase !== null) return
     setSlots(Array(puzzle.slotCount).fill(null))
-    setOperators(defaultOps(puzzle.slotCount, mode))
+    setOperators(puzzleOps(puzzle, mode))
     setSelIdx(null); setValveState('locked')
     setHintPipeIdx(null); setHintStep(0); setWrongMsg('')
-  }, [gameState, transPhase, puzzle.slotCount, mode])
+  }, [gameState, transPhase, puzzle, mode])
 
   const handleHint = useCallback(() => {
     if (!isActive) return
