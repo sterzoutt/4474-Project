@@ -370,7 +370,7 @@
   font-weight: 800;
   color: var(--accent-yellow);
   white-space: nowrap;
-  margin-left: auto;
+  margin-left: auto; /* pushes counter + abandon to right side of bar */
 }
 
 /* ============================================================

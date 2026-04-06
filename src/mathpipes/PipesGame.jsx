@@ -4,7 +4,6 @@ import { isComplete } from './evaluator'
 import { PIPE_VARIANTS }        from './pipeTypes'
 import {
   evaluateSequential,
-  formatLiveEquationString,
   validatePlacement,
 } from './equationValidation'
 import {
@@ -415,7 +414,6 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
   const slotVals   = slots.map((s) => (s ? s.value : null))
   const allFilled  = isComplete(slotVals)
   const liveResult = evaluateSequential(puzzle.start, slotVals, operators)
-  const liveEquationStr = formatLiveEquationString(puzzle.start, slotVals, operators)
   const isMatch    = allFilled && liveResult === puzzle.target
   const isFlowing  = gameState === 'flowing'
   const isCorrect  = gameState === 'correct'
@@ -781,7 +779,6 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
 
       {/* Game UI layer — centered, on top */}
       <div className="game-content">
-        <div className="pg-corner-mode" title="Current math mode">{modePill}</div>
         <div className="game-root">
 
         {/* ── Race Bar (top strip) ── */}
@@ -801,21 +798,10 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
             ))}
           </div>
 
-          <div className="race-player race-player--you">
-            <span className="race-player__name">PROGRESS</span>
-            <div className="race-player__track">
-              <div
-                className="race-player__fill"
-                style={{ width: `${((questionNum - 1) / GAME_LENGTH) * 100}%` }}
-              />
-            </div>
-            <div className="race-player__icon">&#9679;</div>
-          </div>
-
           <span className="race-counter">Q{questionNum}/{GAME_LENGTH} &middot; {score}pts</span>
           {typeof onAbandon === 'function' && (
             <button type="button" className="race-abandon-btn" onClick={() => { clearSession(); onAbandon() }}>
-              Leave &amp; lose progress
+              Abandon
             </button>
           )}
         </div>
@@ -966,12 +952,8 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
 
             </div>{/* end slot-grid */}
 
-            {/* Equation strip — outside slot-grid so overflow:auto never clips it */}
+            {/* Equation strip — outside slot-grid so overflow never clips it */}
             <div className="pg-equation-area">
-              <p className="pg-live-eq-line" title="Live expression (filled slots first)">
-                {liveEquationStr}
-              </p>
-
               <div
                 className={`eq-strip${!allFilled ? '' : isMatch ? ' eq-strip--match' : ''}`}
                 aria-label={`Equation: build the left side to equal ${puzzle.target}`}
@@ -1025,20 +1007,10 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
           </div>{/* end puzzle-panel */}
         </div>{/* end game-body */}
 
-        {/* ── Goal Footer ── */}
-        <div className="goal-footer">
-          <div className="goal-footer__icon" />
-          <div className="goal-footer__text">
-            <strong>START: {puzzle.start} &rarr; TARGET: {puzzle.target}</strong>
-            {' '}&#8212; Fill all slots so the equation reaches the target.
-            {' '}({puzzle.pipes.length - usedIdx.length} pipes remaining)
-          </div>
-        </div>
-
         {/* ── Pipes Bar (bottom toolbar) ── */}
         <div className="pipes-bar">
           <div className="pipes-bar__header">
-            <span className="pipes-bar__label">PIPE PIECES &mdash; {puzzle.pipes.length - usedIdx.length} left</span>
+            <span className="pipes-bar__label">{puzzle.pipes.length - usedIdx.length} pipes left</span>
             <div className="pipes-bar__actions">
               {/* Efficiency of use: keyboard shortcut badges shown next to each button.
                   Subtle enough not to clutter, useful for returning players. */}
