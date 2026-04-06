@@ -19,6 +19,7 @@ import './PipeBoard.css'
 import { useGameAudio } from '../audio/GameAudioProvider.jsx'
 import HowToPlayModal from '../components/HowToPlayModal'
 import { loadGameSettings } from '../audio/audioSettings.js'
+import { loadKeyBindings } from '../audio/keyBindings.js'
 
 const GAME_LENGTH = 8   // questions per session
 const RULER_MAX   = 20  // fixed 1–20 ruler on both pipes
@@ -347,6 +348,11 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
   // Read difficulty once per render cycle (no subscription needed — game mounts fresh per session)
   const difficulty = loadGameSettings().difficulty  // 'Easy' | 'Normal' | 'Hard'
 
+  // ── Efficiency of use: Esc-to-back confirmation ───────────────────────────
+  // Prevents accidental exits from a fast Esc press, while still allowing
+  // experienced players a keyboard path back to the menu.
+  const [showEscConfirm, setShowEscConfirm] = useState(false)
+
   const skipPuzzleResetOnce = useRef(M.skipFirstPuzzleReset)
 
   // Reset everything when the puzzle (question) changes
@@ -557,6 +563,113 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
     setHintsUsed((h) => h + 1)
     setTimeout(() => setHintPipeIdx(null), 2400)
   }, [isActive, puzzle, hintStep, usedIdx])
+
+  // ── Efficiency of use: keyboard shortcuts ────────────────────────────────
+  // All shortcuts are additive — click/drag still works normally.
+  // Beginners are not impacted; experienced players get faster paths.
+  //
+  //   R           → reset current puzzle
+  //   H           → hint
+  //   Enter/Space → open valve (when valve is ready)
+  //   1–9         → select the nth available (non-used) tray pipe
+  //   Tab         → cycle to next available tray pipe
+  //   Esc         → open back-to-menu confirmation
+  useEffect(() => {
+    const handleKey = (e) => {
+      // Don't steal keys from inputs, the How-to-Play modal, or the Esc confirm
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      if (showHelp || showEscConfirm) return
+
+      const key = e.key
+
+      if (key === 'Escape') {
+        e.preventDefault()
+        setShowEscConfirm(true)
+        return
+      }
+
+      // Shortcuts below only apply when the puzzle is active
+      if (!isActive) return
+
+      // Load current key bindings (live — respects any changes saved in Options)
+      const kb = loadKeyBindings()
+
+      if (key === kb.reset) {
+        e.preventDefault()
+        handleReset()
+        return
+      }
+
+      if (key === kb.hint) {
+        e.preventDefault()
+        handleHint()
+        return
+      }
+
+      if (key === kb.valve || key === ' ') {
+        // Open valve if valid; otherwise if a pipe is selected and there is a
+        // first empty slot, place it (speeds up single-click → Enter flow)
+        e.preventDefault()
+        if (allFilled) {
+          handleValve()
+        } else if (selIdx !== null) {
+          const firstEmpty = slots.findIndex((s) => s === null)
+          if (firstEmpty >= 0) handleSlotClick(firstEmpty)
+        }
+        return
+      }
+
+      // 1–9: select pipe by its FIXED tray position (1 = first pipe overall, not first available).
+      // This means labels stay stable — pipe "4" is always key 4, even if pipes 1–3 are placed.
+      const digit = parseInt(key, 10)
+      if (!isNaN(digit) && digit >= 1 && digit <= 9) {
+        e.preventDefault()
+        const pipeIdx = digit - 1  // direct index into puzzle.pipes array
+        if (pipeIdx < puzzle.pipes.length && !usedIdx.includes(pipeIdx)) {
+          handleTrayClick(pipeIdx)
+        }
+        return
+      }
+
+      // Tab: cycle through available pipes in tray order
+      if (key === 'Tab') {
+        e.preventDefault()
+        const available = puzzle.pipes
+          .map((_, i) => i)
+          .filter((i) => !usedIdx.includes(i))
+        if (available.length === 0) return
+        const currentPos = available.indexOf(selIdx ?? -1)
+        const next = available[(currentPos + 1) % available.length]
+        handleTrayClick(next)
+      }
+    }
+
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [
+    isActive, allFilled, selIdx, slots, usedIdx, puzzle.pipes,
+    showHelp, showEscConfirm,
+    handleReset, handleHint, handleValve, handleSlotClick, handleTrayClick,
+  ])
+
+  // ── Efficiency of use: auto-place when pipe is selected ──────────────────
+  // When a pipe is selected and clicked again from the tray, AND there is
+  // exactly one slot left, place it immediately without requiring a second
+  // click on the slot. This removes one interaction step for experienced players.
+  useEffect(() => {
+    if (selIdx === null || !isActive) return
+    const emptySlots = slots.reduce((acc, s, i) => (s === null ? [...acc, i] : acc), [])
+    if (emptySlots.length !== 1) return
+    const onlySlot = emptySlots[0]
+    const { ok } = validatePlacement(puzzle, slots, operators, mode, onlySlot, selIdx)
+    if (!ok) return
+    // Auto-place: replicate handleSlotClick logic directly to avoid stale closure
+    const next = [...slots]
+    next[onlySlot] = { pipeIdx: selIdx, value: puzzle.pipes[selIdx] }
+    setSlots(next)
+    setSelIdx(null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selIdx]) // only re-run when selection changes
 
   const trayState = (i) => {
     if (usedIdx.includes(i)) return 'used'
@@ -925,24 +1038,29 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
           <div className="pipes-bar__header">
             <span className="pipes-bar__label">PIPE PIECES &mdash; {puzzle.pipes.length - usedIdx.length} left</span>
             <div className="pipes-bar__actions">
+              {/* Efficiency of use: keyboard shortcut badges shown next to each button.
+                  Subtle enough not to clutter, useful for returning players. */}
               <button
                 type="button"
                 className="pipe-chip pipe-chip--action"
                 onClick={handleReset}
                 disabled={gameState !== 'playing' || transPhase !== null}
-              >&#8635; RESET</button>
+                title="Reset puzzle [R]"
+              >&#8635; RESET<kbd className="kbd-hint">R</kbd></button>
               <button
                 type="button"
                 className="pipe-chip pipe-chip--action"
                 onClick={handleHint}
                 disabled={!isActive}
-              >? HINT</button>
+                title="Hint [H]"
+              >? HINT<kbd className="kbd-hint">H</kbd></button>
               <button
                 type="button"
                 className={`pipe-chip${valveState === 'ready' ? ' pipe-chip--selected' : ' pipe-chip--action'}`}
                 onClick={handleValve}
                 disabled={!allFilled || !isActive}
-              >&#9881; VALVE</button>
+                title="Open valve [Enter]"
+              >&#9881; VALVE<kbd className="kbd-hint">↵</kbd></button>
               {/* Progressive disclosure: "How it works" — reveals full explanation on demand */}
               <button
                 type="button"
@@ -963,6 +1081,11 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
                 trayShakeIdx === i ? 'pipe-chip--shake-error' : '',
               ].filter(Boolean).join(' ')
 
+              // Efficiency of use: each pipe's keyboard number is its FIXED tray position (i+1).
+              // The number never changes when other pipes are placed — pipe "4" is always "4".
+              // Only show badge if within 1–9 range and the pipe is still available.
+              const kbdNum = i < 9 ? i + 1 : null
+
               return (
                 <button
                   key={i}
@@ -972,9 +1095,14 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
                   onDragStart={() => handleDragStart(i)}
                   onDragEnd={handleDragEnd}
                   disabled={st === 'used'}
-                  aria-label={`Pipe ${val}`}
+                  aria-label={`Pipe ${val}${kbdNum ? ` — key ${kbdNum}` : ''}`}
+                  title={kbdNum && st !== 'used' ? `Pipe ${val} — press ${kbdNum}` : `Pipe ${val}`}
                 >
                   <span className="pipe-chip__body">{val}</span>
+                  {/* Fixed position badge: always matches key number, never re-labels when others are used */}
+                  {kbdNum && st !== 'used' && (
+                    <kbd className="kbd-hint kbd-hint--pipe">{kbdNum}</kbd>
+                  )}
                 </button>
               )
             })}
@@ -996,6 +1124,35 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
             hintsTotal={hintsTotal}
             onHome={() => { clearSession(); onBack() }}
           />
+        )}
+
+        {/* Efficiency of use: Esc confirmation — prevents accidental back navigation.
+            Experienced players can confirm quickly; beginners are protected from
+            accidentally losing progress with a stray Esc press.               */}
+        {showEscConfirm && (
+          <div className="esc-confirm-overlay" role="dialog" aria-modal="true" aria-label="Leave game?">
+            <div className="esc-confirm-panel">
+              <p className="esc-confirm-msg">Leave this session and go back to the menu?</p>
+              <p className="esc-confirm-sub">Your progress is saved — you can continue any time.</p>
+              <div className="esc-confirm-btns">
+                <button
+                  type="button"
+                  className="esc-confirm-btn esc-confirm-btn--go"
+                  onClick={() => { setShowEscConfirm(false); onBack() }}
+                  autoFocus
+                >
+                  Yes, go to menu <kbd className="kbd-hint">Enter</kbd>
+                </button>
+                <button
+                  type="button"
+                  className="esc-confirm-btn esc-confirm-btn--stay"
+                  onClick={() => setShowEscConfirm(false)}
+                >
+                  Stay &amp; keep playing <kbd className="kbd-hint">Esc</kbd>
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Progressive disclosure: full How-to-Play opens on demand from the ? HOW button.

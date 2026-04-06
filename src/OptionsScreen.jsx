@@ -6,11 +6,23 @@ import {
   loadGameSettings,
   saveGameSettings,
 } from './audio/audioSettings'
+import {
+  loadKeyBindings,
+  saveKeyBindings,
+  getDefaultKeyBindings,
+  BINDABLE_ACTIONS,
+  displayKey,
+} from './audio/keyBindings.js'
 
 function OptionsScreen({ onBack }) {
   const { playUiClick } = useGameAudio()
 
   const [tempSettings, setTempSettings] = useState(() => loadGameSettings())
+
+  // Key bindings — each action can be rebound; tempBindings holds unsaved edits
+  const [tempBindings, setTempBindings] = useState(() => loadKeyBindings())
+  // Which action is currently being rebound (waiting for a key press)
+  const [rebindingAction, setRebindingAction] = useState(null)
 
   const handleDifficultyChange = (difficulty) => {
     playUiClick()
@@ -33,13 +45,43 @@ function OptionsScreen({ onBack }) {
   const handleSave = () => {
     playUiClick()
     saveGameSettings(tempSettings)
+    saveKeyBindings(tempBindings)
     alert('Settings saved!')
   }
 
   const handleReset = () => {
     playUiClick()
-    const d = getDefaultGameSettings()
-    setTempSettings(d)
+    setTempSettings(getDefaultGameSettings())
+    setTempBindings(getDefaultKeyBindings())
+  }
+
+  // Start listening for a new key for the given action
+  const handleStartRebind = (actionId) => {
+    playUiClick()
+    setRebindingAction(actionId)
+  }
+
+  // Capture the pressed key and assign it to the action being rebound
+  const handleRebindKeyDown = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const key = e.key
+
+    // Ignore pure modifier presses
+    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(key)) return
+
+    // Escape cancels rebinding without changing anything
+    if (key === 'Escape') {
+      setRebindingAction(null)
+      return
+    }
+
+    // Reject Tab (used for pipe cycling — not rebindable to avoid focus traps)
+    if (key === 'Tab') return
+
+    setTempBindings((prev) => ({ ...prev, [rebindingAction]: key }))
+    setRebindingAction(null)
   }
 
   return (
@@ -134,6 +176,51 @@ function OptionsScreen({ onBack }) {
               <span className="volume-value">{tempSettings.musicVolume}</span>
             </div>
           </div>
+        </div>
+
+        {/* Keyboard Shortcuts */}
+        <div className="settings-section">
+          <h2 className="section-title">Keyboard Shortcuts</h2>
+          <p className="kb-hint-text">
+            Click a key badge to rebind it. Press the new key, or Esc to cancel.
+          </p>
+          <div className="kb-bindings-list">
+            {BINDABLE_ACTIONS.map((action) => (
+              <div key={action.id} className="kb-binding-row">
+                <div className="kb-binding-info">
+                  <span className="kb-binding-label">{action.label}</span>
+                  <span className="kb-binding-desc">{action.description}</span>
+                </div>
+                {rebindingAction === action.id ? (
+                  /* eslint-disable-next-line jsx-a11y/no-static-element-interactions */
+                  <div
+                    className="kb-capture-box"
+                    onKeyDown={handleRebindKeyDown}
+                    tabIndex={0}
+                    autoFocus
+                    aria-label={`Press new key for ${action.label}`}
+                  >
+                    Press a key…
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="kb-key-badge"
+                    onClick={() => handleStartRebind(action.id)}
+                    title={`Click to rebind ${action.label}`}
+                  >
+                    {displayKey(tempBindings[action.id])}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="kb-fixed-note">
+            <strong>Fixed shortcuts (not rebindable):</strong>&nbsp;
+            <kbd className="kb-fixed-key">1–9</kbd> select pipe by position &nbsp;·&nbsp;
+            <kbd className="kb-fixed-key">Tab</kbd> cycle through available pipes &nbsp;·&nbsp;
+            <kbd className="kb-fixed-key">Esc</kbd> back to menu confirmation
+          </p>
         </div>
 
         {/* Action buttons */}

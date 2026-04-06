@@ -1019,3 +1019,135 @@
   animation: pg-shake-horizontal 0.38s ease-in-out, pg-red-flash 0.38s ease-in-out;
   border-color: #ef4444 !important;
 }
+
+/* ── Efficiency of use: keyboard shortcut badges ────────────────────────────
+   Subtle KBD tags appear next to action buttons (tray actions) and pipe chips.
+   They are intentionally muted so beginners don't feel pressured, but provide
+   a clear affordance for returning players who want faster keyboard paths.    */
+
+.kbd-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Inconsolata', 'Consolas', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  vertical-align: middle;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Pipe-chip number badge — floats above the chip, smaller */
+.kbd-hint--pipe {
+  position: absolute;
+  top: -9px;
+  right: -4px;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 9px;
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.38);
+  border-radius: 4px;
+}
+
+/* ── Efficiency of use: Esc-to-back confirmation overlay ────────────────────
+   Protects against accidental back navigation. The panel is small and resolves
+   quickly — experienced users can hit Enter immediately; beginners see the
+   reassurance that their progress is saved.                                  */
+
+.esc-confirm-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 10, 6, 0.75);
+  backdrop-filter: blur(4px);
+  animation: escFadeIn 0.15s ease-out;
+}
+
+@keyframes escFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.esc-confirm-panel {
+  width: min(92vw, 380px);
+  padding: 24px 24px 20px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(160deg, #1a2e1e 0%, #0b160d 100%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  font-family: 'Indie Flower', cursive;
+  text-align: center;
+  animation: escSlideIn 0.18s ease-out;
+}
+
+@keyframes escSlideIn {
+  from { transform: scale(0.95) translateY(-8px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+.esc-confirm-msg {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #f9e27a;
+}
+
+.esc-confirm-sub {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: rgba(210, 255, 210, 0.6);
+}
+
+.esc-confirm-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.esc-confirm-btn {
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.esc-confirm-btn--go {
+  background: linear-gradient(180deg, #c0392b, #8b1f1f);
+  border-color: rgba(220, 100, 80, 0.5);
+  color: #fff;
+}
+.esc-confirm-btn--go:hover {
+  background: linear-gradient(180deg, #d44233, #a02828);
+  transform: translateY(-1px);
+}
+
+.esc-confirm-btn--stay {
+  background: linear-gradient(180deg, #2f5d34, #1a3a1e);
+  border-color: rgba(100, 200, 100, 0.35);
+  color: rgba(210, 255, 210, 0.9);
+}
+.esc-confirm-btn--stay:hover {
+  background: linear-gradient(180deg, #3c7542, #245128);
+  transform: translateY(-1px);
+}
