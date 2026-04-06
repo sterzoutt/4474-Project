@@ -998,9 +998,10 @@ function PipesGame({ mode, onBack, initialSession = null, onAbandon }) {
           />
         )}
 
-        {/* Progressive disclosure: full How-to-Play opens on demand from the ? HOW button */}
+        {/* Progressive disclosure: full How-to-Play opens on demand from the ? HOW button.
+            Passes current mode so the explanation matches exactly what the player is doing. */}
         {showHelp && (
-          <HowToPlayModal onClose={() => setShowHelp(false)} />
+          <HowToPlayModal mode={mode} onClose={() => setShowHelp(false)} />
         )}
 
       </div>
