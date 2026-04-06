@@ -24,6 +24,7 @@ function GameScreen() {
   const isCorrect = currentSum === targetValue
   const canCheck = placedPipes.length > 0
 
+  /* Set state for pipe to be dragged */
   const handleDragStart = (pipe, e) => {
     setDraggedPipe(pipe)
     setShowRotationHint(true)
@@ -77,6 +78,7 @@ function GameScreen() {
     setShowRotationHint(false)
   }
 
+  /* Handles when user needs to remove pipe, store id, and change sums */
   const handleRemovePipe = (pipeId) => {
     setHistory([...history, placedPipes])
     const newPlacedPipes = placedPipes.filter(p => p.id !== pipeId)
@@ -158,7 +160,7 @@ function GameScreen() {
   const generateRulerNumbers = () => {
     return Array.from({ length: 30 }, (_, i) => i + 1)
   }
-
+  /* Dynamically placed numbers in equation based on pipes placed in slots */
   const getPipeEquation = () => {
     if (placedPipes.length === 0) {
       return '_ + _ + _ = _'
