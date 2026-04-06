@@ -1,21 +1,23 @@
+import correctSfxUrl from './dragon-studio-correct-472358.mp3'
+import waterSfxUrl from './freesound_community-flowing-water-100525.mp3'
+import levelCompleteSfxUrl from './freesound_crunchpixstudio-level-complete-394515.mp3'
+import bgmUrl from './mondamusic-coffee-morning-coffee-shop-music-499186.mp3'
+import wrongSfxUrl from './u_n2rdb8hxnh-incorrect-293358.mp3'
+
 /**
  * Game settings (difficulty + audio) in localStorage.
- *
- * Audio files (place in `public/audio/` at repo root):
- *   - bgm.mp3      — background music (looped)
- *   - correct.mp3  — correct answer
- *   - wrong.mp3    — invalid move / wrong valve
- *   - ui-click.mp3 — optional menu button tap
  */
 
 export const GAME_SETTINGS_KEY = 'gameSettings'
 
-/** Vite serves `public/` at site root — use these URLs in Audio elements */
 export const AUDIO_URLS = {
-    bgm: '/audio/bgm.mp3',
-    correct: '/audio/correct.mp3',
-    wrong: '/audio/wrong.mp3',
-    uiClick: '/audio/ui-click.mp3',
+    bgm: bgmUrl,
+    correct: correctSfxUrl,
+    wrong: wrongSfxUrl,
+    flow: waterSfxUrl,
+    levelComplete: levelCompleteSfxUrl,
+    // Optional UI click sound. Keep null unless a dedicated click file is added.
+    uiClick: null,
 }
 
 const DIFFICULTIES = new Set(['Easy', 'Normal', 'Hard'])

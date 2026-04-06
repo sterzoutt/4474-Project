@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import './OptionsScreen.css'
 import { useGameAudio } from './audio/GameAudioProvider.jsx'
 import {
@@ -19,11 +19,25 @@ function OptionsScreen({ onBack }) {
   const { playUiClick } = useGameAudio()
 
   const [tempSettings, setTempSettings] = useState(() => loadGameSettings())
+  const lastUnmutedVolumesRef = useRef({
+    musicVolume: tempSettings.musicVolume > 0 ? tempSettings.musicVolume : 50,
+    sfxVolume: tempSettings.sfxVolume > 0 ? tempSettings.sfxVolume : 50,
+  })
 
   // Key bindings — each action can be rebound; tempBindings holds unsaved edits
   const [tempBindings, setTempBindings] = useState(() => loadKeyBindings())
   // Which action is currently being rebound (waiting for a key press)
   const [rebindingAction, setRebindingAction] = useState(null)
+
+  const applyAudioSettings = (next) => {
+    setTempSettings(next)
+    saveGameSettings({
+      difficulty: next.difficulty,
+      musicVolume: next.musicVolume,
+      sfxVolume: next.sfxVolume,
+      audioMuted: next.audioMuted,
+    })
+  }
 
   const handleDifficultyChange = (difficulty) => {
     playUiClick()
@@ -33,14 +47,19 @@ function OptionsScreen({ onBack }) {
   const handleMuteToggle = () => {
     playUiClick()
     if (tempSettings.audioMuted) {
-      setTempSettings({
+      const restored = {
         ...tempSettings,
         audioMuted: false,
-        musicVolume: 50,
-        sfxVolume: 50,
-      })
+        musicVolume: lastUnmutedVolumesRef.current.musicVolume,
+        sfxVolume: lastUnmutedVolumesRef.current.sfxVolume,
+      }
+      applyAudioSettings(restored)
     } else {
-      setTempSettings({
+      lastUnmutedVolumesRef.current = {
+        musicVolume: tempSettings.musicVolume > 0 ? tempSettings.musicVolume : 50,
+        sfxVolume: tempSettings.sfxVolume > 0 ? tempSettings.sfxVolume : 50,
+      }
+      applyAudioSettings({
         ...tempSettings,
         audioMuted: true,
         musicVolume: 0,
@@ -50,11 +69,29 @@ function OptionsScreen({ onBack }) {
   }
 
   const handleSfxVolumeChange = (e) => {
-    setTempSettings({ ...tempSettings, sfxVolume: parseInt(e.target.value, 10) })
+    const sfxVolume = parseInt(e.target.value, 10)
+    const next = {
+      ...tempSettings,
+      sfxVolume,
+      audioMuted: tempSettings.musicVolume === 0 && sfxVolume === 0,
+    }
+    if (sfxVolume > 0) {
+      lastUnmutedVolumesRef.current.sfxVolume = sfxVolume
+    }
+    applyAudioSettings(next)
   }
 
   const handleMusicVolumeChange = (e) => {
-    setTempSettings({ ...tempSettings, musicVolume: parseInt(e.target.value, 10) })
+    const musicVolume = parseInt(e.target.value, 10)
+    const next = {
+      ...tempSettings,
+      musicVolume,
+      audioMuted: musicVolume === 0 && tempSettings.sfxVolume === 0,
+    }
+    if (musicVolume > 0) {
+      lastUnmutedVolumesRef.current.musicVolume = musicVolume
+    }
+    applyAudioSettings(next)
   }
 
   const handleSave = () => {
@@ -159,7 +196,7 @@ function OptionsScreen({ onBack }) {
               <span className="toggle-on">ON</span>
             </button>
             <p className="audio-hint">
-              Mute sets SFX and music to 0; turning mute off sets both volumes to 50.
+              Mute sets SFX and music to 0; turning mute off restores your previous levels.
             </p>
           </div>
 

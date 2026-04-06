@@ -13,10 +13,12 @@ import {
 } from './audioSettings'
 
 const GameAudioContext = createContext(null)
+const BGM_LOW_MIX = 0.3
+const SFX_GAIN = { flow: 1.3 }
 
 function effectiveMusicVol(snapshot) {
   if (snapshot.audioMuted) return 0
-  return Math.min(1, Math.max(0, snapshot.musicVolume / 100))
+  return Math.min(1, Math.max(0, (snapshot.musicVolume / 100) * BGM_LOW_MIX))
 }
 
 function effectiveSfxVol(snapshot) {
@@ -26,7 +28,7 @@ function effectiveSfxVol(snapshot) {
 
 export function GameAudioProvider({ children }) {
   const bgRef = useRef(null)
-  const sfxRef = useRef({ correct: null, wrong: null, uiClick: null })
+  const sfxRef = useRef({ correct: null, wrong: null, flow: null, levelComplete: null, uiClick: null })
   const unlockedRef = useRef(false)
 
   const syncVolumes = useCallback(() => {
@@ -68,20 +70,24 @@ export function GameAudioProvider({ children }) {
     bg.preload = 'auto'
     bgRef.current = bg
 
-    const names = ['correct', 'wrong', 'uiClick']
+    const names = ['correct', 'wrong', 'flow', 'levelComplete', 'uiClick']
     const sfxSlotRef = sfxRef
     const createdSfx = {}
     for (const name of names) {
-      const el = new Audio(AUDIO_URLS[name])
+      const url = AUDIO_URLS[name]
+      if (!url) {
+        createdSfx[name] = null
+        sfxRef.current[name] = null
+        continue
+      }
+      const el = new Audio(url)
       el.preload = 'auto'
       el.addEventListener(
         'error',
         () => {
           if (import.meta.env.DEV) {
-            const file =
-              name === 'uiClick' ? 'ui-click.mp3' : `${name}.mp3`
             console.warn(
-              `[audio] Missing or invalid SFX "${name}". Add: public/audio/${file}`
+              `[audio] Missing or invalid SFX "${name}". Check src/audio asset mapping.`
             )
           }
         },
@@ -94,7 +100,7 @@ export function GameAudioProvider({ children }) {
     const onBgError = () => {
       if (import.meta.env.DEV) {
         console.warn(
-          '[audio] Missing or invalid BGM. Add: public/audio/bgm.mp3'
+          '[audio] Missing or invalid BGM. Check src/audio asset mapping.'
         )
       }
       bg.onerror = null
@@ -130,7 +136,7 @@ export function GameAudioProvider({ children }) {
           el.src = ''
         }
       }
-      sfxSlotRef.current = { correct: null, wrong: null, uiClick: null }
+      sfxSlotRef.current = { correct: null, wrong: null, flow: null, levelComplete: null, uiClick: null }
     }
   }, [syncVolumes, tryResumeMusic, unlock])
 
@@ -141,7 +147,8 @@ export function GameAudioProvider({ children }) {
       const el = sfxRef.current[id]
       if (!el) return
       try {
-        el.volume = effectiveSfxVol(snap)
+        const gain = SFX_GAIN[id] ?? 1
+        el.volume = Math.min(1, effectiveSfxVol(snap) * gain)
         el.currentTime = 0
         const p = el.play()
         if (p && typeof p.catch === 'function') p.catch(() => {})

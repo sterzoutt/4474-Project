@@ -547,7 +547,8 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
   useEffect(() => {
     if (!sessionDone) return
     recordSessionComplete()
-  }, [sessionDone])
+    playSfx('levelComplete')
+  }, [sessionDone, playSfx])
 
   // ── Transition: enter → clear, making the next puzzle fully interactive ──
   useEffect(() => {
@@ -630,6 +631,7 @@ function PipesGame({ mode, onBack, onPlayAgain, initialSession = null, onAbandon
       playSfx('correct')
       setValveState('open')
       setGameState('flowing')
+      playSfx('flow')
       announce('Correct! Water is flowing.')
       const pts = hintsUsed === 0 ? 15 : 10
       setScore((s) => s + pts)
