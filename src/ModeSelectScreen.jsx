@@ -5,7 +5,9 @@ import {
 } from './mathpipes/pipesSession'
 import { puzzleTierShortLabel } from './audio/audioSettings'
 import './ModeSelectScreen.css'
-
+/*
+mapping modes to labels
+*/
 const MODE_LABEL = {
   addition: '+ Addition',
   subtraction: '− Subtraction',
@@ -17,7 +19,9 @@ export default function ModeSelectScreen({ onBack, onEnterGame }) {
   const canContinue = isSessionLoadable()
 
   const saved = canContinue && snapshot ? snapshot : null
-
+/*
+show saved data if it exists else empty message
+*/
   return (
     <div className="app home-screen mode-select-screen">
       <button type="button" className="mode-select-back" onClick={onBack}>
@@ -28,7 +32,6 @@ export default function ModeSelectScreen({ onBack, onEnterGame }) {
         <p className="mode-select-hint">
           Pick a math type. Your run is saved automatically — continue anytime, or start a new game (that replaces the save).
         </p>
-
         {/* ── In-progress save ── */}
         <section className="mode-select-save-section" aria-label="Saved progress">
           <h2 className="mode-select-section-title">Current save</h2>
